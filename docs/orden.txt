@@ -1,0 +1,25 @@
+1.Datos
+  1. Cargar PDFs o cargar apuntes + OCR
+  2. Extraer texto
+  3. Dividir en chunks
+  4. Generar embeddings
+  5. Guardar en base vectorial (pgvector)
+2.Query
+  1. Usuario pregunta o pide algo
+  2. Se convierte la query en embedding
+  3. Buscas los chunks más relevantes
+  4. Se los pasas al LLM como contexto
+  5. El LLM genera respuesta / flashcards / resumenes
+3.Sistema
+  1.Gestion de usuarios.
+  2.Relaciones con documentos
+  3.Guardar los resultados.
+  4.Filtrar por asignatura
+
+
+Frontend: React native
+Backend: Fastapi
+AI: Hugging Face
+Documentos + RAG: Llamaindex
+Database: Supabase+pgvector
+

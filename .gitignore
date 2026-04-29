@@ -1,0 +1,74 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.local
+.env.*.local
+
+# =========================
+# FastAPI / backend cache
+# =========================
+.cache/
+.pytest_cache/
+
+# =========================
+# Hugging Face / ML cache
+# =========================
+.cache/huggingface/
+.cache/torch/
+models/
+
+# =========================
+# LlamaIndex / embeddings cache
+# =========================
+.storage/
+index_store/
+vector_store/
+
+# =========================
+# Data (IMPORTANT: PDFs / datasets)
+# =========================
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# CUDA / ML temp files
+# =========================
+*.tmp
+*.bin
+*.safetensors
+
+# =========================
+# Jupyter (si lo usas)
+# =========================
+.ipynb_checkpoints/
