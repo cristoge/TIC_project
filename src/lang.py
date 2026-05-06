@@ -5,7 +5,6 @@ import operator
 from langgraph.graph import END, StateGraph, START
 from typing_extensions import TypedDict, Annotated
 from langchain.messages import AnyMessage, SystemMessage, ToolMessage, HumanMessage
-from IPython.display import Image, display
 
 model = ChatOllama(model="qwen2:7b", temperature=0)
 
@@ -31,40 +30,14 @@ def should_continue(state: MessagesState) -> Literal["tool_node", END]:
 
 # Define tools
 @tool
-def multiply(a: int, b: int) -> int:
-    """Multiply `a` and `b`.
+def get_object_topic(name: str) -> str:
+    """Returns a topic to be described by the LLM."""
 
-    Args:
-        a: First int
-        b: Second int
-    """
-    return a * b
-
-
-@tool
-def add(a: int, b: int) -> int:
-    """Adds `a` and `b`.
-
-    Args:
-        a: First int
-        b: Second int
-    """
-    return a + b
-
-
-@tool
-def divide(a: int, b: int) -> float:
-    """Divide `a` and `b`.
-
-    Args:
-        a: First int
-        b: Second int
-    """
-    return a / b
+    return f"Explica de forma clara y precisa qué es: {name}"
 
 
 # Augment the LLM with tools
-tools = [add, multiply, divide]
+tools = [get_object_topic]
 tools_by_name = {tool.name: tool for tool in tools}
 model_with_tools = model.bind_tools(tools)
 
@@ -77,7 +50,13 @@ def llm_call(state: dict):
             model_with_tools.invoke(
                 [
                     SystemMessage(
-                        content="You are a helpful assistant tasked with performing arithmetic on a set of inputs."
+                        content="""
+Eres un asistente que responde SIEMPRE en español.
+
+Explica todo de forma clara, precisa y educativa en español.
+
+Nunca respondas en inglés.
+"""
                     )
                 ]
                 + state["messages"]
@@ -114,9 +93,6 @@ agent_builder.add_edge("tool_node", "llm_call")
 agent = agent_builder.compile()
 
 # Show the agent
-
-display(Image(agent.get_graph(xray=True).draw_mermaid_png()))
-
 # Invoke
 
 while True:
