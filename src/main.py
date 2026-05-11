@@ -1,8 +1,6 @@
-from fastapi import FastAPI
-
-app = FastAPI()
+from agents.graph import run_agent
 
 
-@app.get("/")
-def root():
-    return {"status": "ok"}
+document_id = ""
+
+print(run_agent("hazme unas flashcards para estudiar", document_id))
