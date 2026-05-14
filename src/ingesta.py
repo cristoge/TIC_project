@@ -60,8 +60,9 @@ def ingest_document(project_id: str, pdf_path: str, nombre_original: str):
         raise
 
 
-ingest_document(
-    project_id="",
-    pdf_path="../docs/ejemplo2.pdf",
-    nombre_original="documento.pdf",
-)
+if __name__ == "__main__":
+    ingest_document(
+        project_id="",
+        pdf_path="../docs/ejemplo2.pdf",
+        nombre_original="documento.pdf",
+    )

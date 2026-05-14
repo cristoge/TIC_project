@@ -1,6 +1,16 @@
-from agents.graph import run_agent
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from routers import auth, projects, documents
 
+app = FastAPI()
 
-document_id = ""
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-print(run_agent("hazme unas flashcards para estudiar", document_id))
+app.include_router(auth.router)
+app.include_router(projects.router)
+app.include_router(documents.router)
