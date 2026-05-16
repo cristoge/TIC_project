@@ -14,6 +14,7 @@ Según la pregunta devuelve SOLO una de estas palabras:
 - test: si el usuario quiere preguntas de test
 - flashcards: si el usuario quiere flashcards para estudiar
 - explicacion: si el usuario quiere una explicación o tiene una pregunta libre
+- corregir_test: si el usuario está enviando respuestas a un test para que las corrijas
 
 Devuelve SOLO la palabra, sin explicación."""
             ),
@@ -21,12 +22,12 @@ Devuelve SOLO la palabra, sin explicación."""
         ]
     )
     tipo = respuesta.content.strip().lower()
-    if tipo not in ["resumen", "test", "flashcards", "explicacion"]:
+    if tipo not in ["resumen", "test", "flashcards", "explicacion", "corregir_test"]:
         tipo = "explicacion"
     return {**state, "tipo_agente": tipo}
 
 
 def decidir_agente(
     state: AgentState,
-) -> Literal["resumen", "test", "flashcards", "explicacion"]:
+) -> Literal["resumen", "test", "flashcards", "explicacion", "corregir_test"]:
     return state["tipo_agente"]

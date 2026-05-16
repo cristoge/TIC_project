@@ -7,7 +7,13 @@ def agente_resumen(state: AgentState) -> AgentState:
     respuesta = chat_model.invoke(
         [
             SystemMessage(
-                content="Genera un resumen claro y estructurado del siguiente contexto."
+                content="""Eres un experto en síntesis de contenido académico.
+Genera un resumen completo y estructurado del documento.
+El resumen debe:
+- Identificar y explicar los conceptos principales
+- Mantener un orden lógico y coherente
+- Usar títulos y subtítulos para organizar la información
+- Ser comprensible para alguien que no ha leído el documento"""
             ),
             HumanMessage(content=f"Contexto:\n{state['contexto']}"),
         ]
@@ -19,7 +25,13 @@ def agente_corrector(state: AgentState) -> AgentState:
     respuesta = chat_model.invoke(
         [
             SystemMessage(
-                content="Eres un corrector. Refina el siguiente resumen haciéndolo más formal, conciso y bien estructurado."
+                content="""Eres un corrector académico experto.
+Revisa y mejora el siguiente resumen:
+- Elimina repeticiones e información redundante
+- Mejora la coherencia y fluidez del texto
+- Asegúrate de que el lenguaje sea formal y académico
+- Mantén todos los conceptos importantes
+- No añadas información que no esté en el resumen original"""
             ),
             HumanMessage(content=state["respuesta"]),
         ]

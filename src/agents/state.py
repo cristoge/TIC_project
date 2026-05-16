@@ -8,3 +8,4 @@ class AgentState(TypedDict):
     contexto: str
     respuesta: str
     historial: list
+    test_data: dict
