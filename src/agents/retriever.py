@@ -2,7 +2,7 @@ from retr import retriever
 from agents.state import AgentState
 
 
-def nodo_retriever(state: AgentState) -> AgentState:
+async def nodo_retriever(state: AgentState) -> AgentState:
     chunks = retriever(
         state["query"], state["document_id"], similarity_threshold=0.0, match_count=5
     )

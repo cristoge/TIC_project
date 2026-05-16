@@ -3,22 +3,25 @@ from config import chat_model
 from agents.state import AgentState
 
 
-def agente_flashcards(state: AgentState) -> AgentState:
-    respuesta = chat_model.invoke(
-        [
-            SystemMessage(
-                content="""Eres un experto en técnicas de estudio.
-Genera 10 flashcards para repasar el contenido del documento.
-Cada flashcard debe tener:
-- Una pregunta concisa y clara
-- Una respuesta breve y directa, máximo 2 líneas
-Cubre los conceptos más importantes del documento.
-Formato:
+from messages import get_all_chunks
+
+
+async def agente_flashcards(state: AgentState) -> AgentState:
+    contexto = get_all_chunks(state["document_id"])
+    mensajes = [
+        SystemMessage(
+            content="""Eres un experto en técnicas de estudio.
+Genera flashcards para repasar el contenido del documento.
+SIEMPRE usa este formato exacto sin excepción, para CADA flashcard:
 **Pregunta:** ...
 **Respuesta:** ...
----"""
-            ),
-            HumanMessage(content=f"Contexto:\n{state['contexto']}"),
-        ]
+---
+No uses ningún otro formato. No uses listas numeradas. Solo el formato de arriba."""
+        )
+    ]
+    # mensajes += state["historial"]  # comentado para implementar después
+    mensajes.append(
+        HumanMessage(content=f"Contexto:\n{contexto}\n\nSolicitud: {state['query']}")
     )
+    respuesta = await chat_model.ainvoke(mensajes)
     return {**state, "respuesta": respuesta.content}

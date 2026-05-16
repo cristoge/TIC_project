@@ -1,10 +1,12 @@
 from langchain_core.messages import HumanMessage, SystemMessage
 from config import chat_model
 from agents.state import AgentState
+from messages import get_all_chunks
 
 
-def agente_resumen(state: AgentState) -> AgentState:
-    respuesta = chat_model.invoke(
+async def agente_resumen(state: AgentState) -> AgentState:
+    contexto = get_all_chunks(state["document_id"])
+    respuesta = await chat_model.ainvoke(
         [
             SystemMessage(
                 content="""Eres un experto en síntesis de contenido académico.
@@ -15,14 +17,14 @@ El resumen debe:
 - Usar títulos y subtítulos para organizar la información
 - Ser comprensible para alguien que no ha leído el documento"""
             ),
-            HumanMessage(content=f"Contexto:\n{state['contexto']}"),
+            HumanMessage(content=f"Contexto:\n{contexto}"),
         ]
     )
     return {**state, "respuesta": respuesta.content}
 
 
-def agente_corrector(state: AgentState) -> AgentState:
-    respuesta = chat_model.invoke(
+async def agente_corrector(state: AgentState) -> AgentState:
+    respuesta = await chat_model.ainvoke(
         [
             SystemMessage(
                 content="""Eres un corrector académico experto.

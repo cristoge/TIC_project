@@ -3,14 +3,14 @@ from config import chat_model
 from agents.state import AgentState
 
 
-def agente_explicacion(state: AgentState) -> AgentState:
-    respuesta = chat_model.invoke(
+async def agente_explicacion(state: AgentState) -> AgentState:
+    respuesta = await chat_model.ainvoke(
         [
             SystemMessage(
                 content="""Eres un asistente experto en el contenido del documento.
-Responde la pregunta del usuario de forma clara, precisa y bien estructurada.
-Basa tu respuesta ÚNICAMENTE en el contexto proporcionado.
-Si la información no está en el contexto, indícalo claramente en lugar de inventarte una respuesta."""
+Responde la pregunta del usuario de forma clara y precisa.
+Puedes basarte en el contexto del documento Y en el historial de la conversación.
+Si la información está en el historial úsala, si está en el contexto úsala también."""
             ),
             HumanMessage(
                 content=f"Contexto:\n{state['contexto']}\n\nPregunta: {state['query']}"
