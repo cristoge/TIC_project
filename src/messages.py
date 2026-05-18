@@ -22,7 +22,23 @@ async def guardar_mensajes(
     ).execute()
 
 
+# para el llm
 async def get_historial(document_id: str) -> list:
+    mensajes = (
+        supabase.table("chat_messages")
+        .select("*")
+        .eq("document_id", document_id)
+        .in_("rol", ["user", "assistant"])
+        .order("created_at", desc=True)
+        .limit(4)
+        .execute()
+    )
+    mensajes.data.reverse()
+    return mensajes.data
+
+
+# Para React Native - todo el historial
+async def get_all_historial(document_id: str) -> list:
     mensajes = (
         supabase.table("chat_messages")
         .select("*")
