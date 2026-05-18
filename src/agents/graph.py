@@ -82,6 +82,6 @@ def initial_state(query: str, document_id: str, historial: list = []) -> dict:
         "tipo_agente": "",
         "contexto": "",
         "respuesta": "",
-        "historial": [],
+        "historial": historial,
         "test_data": {},
     }

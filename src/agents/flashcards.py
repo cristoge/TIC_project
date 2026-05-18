@@ -7,19 +7,25 @@ from messages import get_all_chunks
 
 
 async def agente_flashcards(state: AgentState) -> AgentState:
+    # DEBUG - ver historial
+    print("\n=== HISTORIAL EN AGENTE ===")
+    for m in state["historial"]:
+        print(f"{type(m).__name__}: {m.content[:100]}")
+    print("===========================\n")
+
     contexto = get_all_chunks(state["document_id"])
     mensajes = [
         SystemMessage(
             content="""Eres un experto en técnicas de estudio.
-Genera flashcards para repasar el contenido del documento.
-SIEMPRE usa este formato exacto sin excepción, para CADA flashcard:
+Genera una flashcard para repasar el contenido del documento.
+SIEMPRE usa este formato exacto sin excepción, para la flashcard:
 **Pregunta:** ...
 **Respuesta:** ...
 ---
 No uses ningún otro formato. No uses listas numeradas. Solo el formato de arriba."""
         )
     ]
-    # mensajes += state["historial"]  # comentado para implementar después
+    mensajes += state["historial"]
     mensajes.append(
         HumanMessage(content=f"Contexto:\n{contexto}\n\nSolicitud: {state['query']}")
     )

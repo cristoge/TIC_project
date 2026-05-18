@@ -16,7 +16,7 @@ class ChatRequest(BaseModel):
 
 async def cargar_historial(document_id: str) -> list:
     mensajes = await get_historial(document_id)
-    mensajes = mensajes[-10:]
+    mensajes = mensajes[-5:]
     return [
         HumanMessage(content=m["contenido"])
         if m["rol"] == "user"
@@ -28,19 +28,17 @@ async def cargar_historial(document_id: str) -> list:
 @router.post("/")
 async def chat(request: ChatRequest):
     async def generate():
+        historial = await cargar_historial(request.document_id)
         contenido_completo = ""
         tipo_agente = ""
         async for chunk in app_graph.astream(
-            initial_state(request.query, request.document_id),
-            stream_mode=["messages", "updates"],
+            initial_state(request.query, request.document_id, historial),
+            stream_mode="messages",
             version="v2",
         ):
-            if chunk["type"] == "updates" and "router" in chunk["data"]:
-                tipo_agente = chunk["data"]["router"]["tipo_agente"]
-                yield json.dumps({"type": "meta", "agent": tipo_agente}) + "\n"
             if chunk["type"] == "messages":
                 msg, metadata = chunk["data"]
-                if msg.content and metadata["langgraph_node"] not in ["router"]:
+                if msg.content and metadata["langgraph_node"] != "router":
                     contenido_completo += msg.content
                     yield json.dumps({"type": "token", "data": msg.content}) + "\n"
         await guardar_mensajes(
