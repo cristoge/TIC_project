@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, chat, projects, documents
+from routers import auth, chat, projects, documents, simple_chat
 
 app = FastAPI()
 
@@ -15,3 +15,4 @@ app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(documents.router)
 app.include_router(chat.router)
+app.include_router(simple_chat.router)
