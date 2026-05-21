@@ -3,13 +3,13 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from config import supabase, embedding_model
 
 
-def ingest_document(project_id: str, pdf_path: str, nombre_original: str):
+def ingest_document(project_id: str, pdf_path: str, nombre: str):
     doc = (
         supabase.table("documents")
         .insert(
             {
                 "project_id": project_id,
-                "nombre_original": nombre_original,
+                "nombre_original": nombre,
                 "processing_status": "processing",
             }
         )
@@ -64,5 +64,5 @@ if __name__ == "__main__":
     ingest_document(
         project_id="",
         pdf_path="../docs/ejemplo2.pdf",
-        nombre_original="documento.pdf",
+        nombre="documento.pdf",
     )

@@ -6,6 +6,16 @@ from ingesta import ingest_document
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
+@router.get("/user/{user_id}")
+def get_user_documents(user_id: str):
+    projects = supabase.table("projects").select("id").eq("user_id", user_id).execute()
+    project_ids = [p["id"] for p in projects.data]
+    if not project_ids:
+        return {"documents": []}
+    documents = supabase.table("documents").select("*").in_("project_id", project_ids).execute()
+    return {"documents": documents.data}
+
+
 @router.get("/{project_id}")
 def get_documents(project_id: str):
     documents = (

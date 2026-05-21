@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from agents.graph import app_graph, initial_state
-from messages import guardar_mensajes, get_historial
+from messages import guardar_mensajes, get_historial, get_all_historial
 from langchain_core.messages import HumanMessage, AIMessage
 import json
 
@@ -43,4 +43,10 @@ async def chat(request: ChatRequest):
 @router.get("/{document_id}/history")
 async def get_chat_history(document_id: str):
     mensajes = await get_historial(document_id)
+    return {"mensajes": mensajes}
+
+
+@router.get("/{document_id}/messages")
+async def get_all_messages(document_id: str):
+    mensajes = await get_all_historial(document_id)
     return {"mensajes": mensajes}
