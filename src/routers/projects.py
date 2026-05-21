@@ -11,6 +11,10 @@ class ProjectRequest(BaseModel):
     descripcion: str
 
 
+class RenameRequest(BaseModel):
+    nombre: str
+
+
 @router.get("/{user_id}")
 def get_projects(user_id: str):
     projects = supabase.table("projects").select("*").eq("user_id", user_id).execute()
@@ -31,6 +35,12 @@ def create_project(request: ProjectRequest):
         .execute()
     )
     return {"project_id": project.data[0]["id"]}
+
+
+@router.patch("/{project_id}")
+def rename_project(project_id: str, request: RenameRequest):
+    supabase.table("projects").update({"nombre": request.nombre}).eq("id", project_id).execute()
+    return {"status": "updated"}
 
 
 @router.delete("/{project_id}")

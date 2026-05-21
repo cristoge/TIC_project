@@ -1,9 +1,15 @@
+import threading
 from fastapi import APIRouter, HTTPException, UploadFile, File
-from config import supabase
-from ingesta import ingest_document
+from pydantic import BaseModel
+from config import supabase, supabase_admin
+from ingesta import ingest_document, process_document
 
 
 router = APIRouter(prefix="/documents", tags=["documents"])
+
+
+class RenameRequest(BaseModel):
+    nombre: str
 
 
 @router.get("/user/{user_id}")
@@ -24,10 +30,35 @@ def get_documents(project_id: str):
     return {"documents": documents.data}
 
 
-#
-# @router.post("/{project_id}")
-# def upload_document(project_id: str, file: UploadFile = File(...)):
-#
+@router.post("/{project_id}")
+async def upload_document(project_id: str, file: UploadFile = File(...)):
+    nombre = file.filename or "documento.pdf"
+    content = await file.read()
+
+    storage_path = f"{project_id}/{nombre}"
+    supabase_admin.storage.from_("documents").upload(
+        path=storage_path,
+        file=content,
+        file_options={"content-type": "application/pdf"},
+    )
+    pdf_url = supabase_admin.storage.from_("documents").get_public_url(storage_path)
+
+    doc = supabase.table("documents").insert({
+        "project_id": project_id,
+        "nombre": nombre,
+        "processing_status": "processing",
+    }).execute()
+    document_id = doc.data[0]["id"]
+
+    threading.Thread(target=process_document, args=(document_id, pdf_url), daemon=True).start()
+
+    return {"document_id": document_id, "status": "processing"}
+
+
+@router.patch("/{document_id}")
+def rename_document(document_id: str, request: RenameRequest):
+    supabase.table("documents").update({"nombre": request.nombre}).eq("id", document_id).execute()
+    return {"status": "updated"}
 
 
 @router.delete("/{document_id}")

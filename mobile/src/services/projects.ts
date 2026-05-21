@@ -28,3 +28,17 @@ export async function createProject(
   const data = await res.json()
   return data.project_id
 }
+
+export async function renameProject(projectId: string, nombre: string): Promise<void> {
+  const res = await fetch(`${API_URL}/projects/${projectId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nombre }),
+  })
+  if (!res.ok) throw new Error('Error al renombrar proyecto')
+}
+
+export async function deleteProject(projectId: string): Promise<void> {
+  const res = await fetch(`${API_URL}/projects/${projectId}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Error al eliminar proyecto')
+}
