@@ -16,4 +16,4 @@ embedding_model = OllamaEmbeddings(
     dimensions=512,
     base_url=OLLAMA_URL,
 )
-chat_model = ChatOllama(model="gemma4:31b", base_url=OLLAMA_URL)
+chat_model = ChatOllama(model="gemma4:e4b", base_url=OLLAMA_URL)

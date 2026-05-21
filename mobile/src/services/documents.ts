@@ -20,3 +20,8 @@ export async function getUserDocuments(userId: string): Promise<Document[]> {
   const data = await res.json()
   return data.documents
 }
+
+export async function deleteDocument(documentId: string): Promise<void> {
+  const res = await fetch(`${API_URL}/documents/${documentId}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Error al eliminar documento')
+}

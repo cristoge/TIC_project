@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native'
+import { useLocalSearchParams } from 'expo-router'
 import Chat from '../../components/Chat'
 import { streamSimpleChat } from '../../services/simpleChat'
 import { useAuthStore } from '../../store/authStore'
@@ -25,8 +26,9 @@ function Greeting() {
 }
 
 export default function Home() {
+  const { newChat } = useLocalSearchParams<{ newChat: string }>()
   return (
-    <Chat onSend={streamSimpleChat} emptyState={<Greeting />} />
+    <Chat key={newChat ?? 'initial'} onSend={streamSimpleChat} emptyState={<Greeting />} />
   )
 }
 
