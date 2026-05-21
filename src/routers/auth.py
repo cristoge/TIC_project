@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel
 from config import supabase
 
@@ -13,6 +13,19 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+
+class UpdateProfileRequest(BaseModel):
+    nombre: str
+
+
+def get_user_id(authorization: str = Header(...)) -> str:
+    try:
+        token = authorization.split(" ")[1]
+        response = supabase.auth.get_user(token)
+        return response.user.id
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token inválido")
 
 
 @router.post("/register")
@@ -41,4 +54,22 @@ def login(request: LoginRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+
+
+@router.get("/me")
+def get_me(user_id: str = Depends(get_user_id)):
+    try:
+        response = supabase.table("usuarios").select("nombre, email").eq("id", user_id).single().execute()
+        return response.data
+    except Exception:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+
+@router.patch("/me")
+def update_me(request: UpdateProfileRequest, user_id: str = Depends(get_user_id)):
+    try:
+        supabase.table("usuarios").update({"nombre": request.nombre}).eq("id", user_id).execute()
+        return {"ok": True}
+    except Exception:
+        raise HTTPException(status_code=400, detail="Error al actualizar")
 
