@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { ChatMessage } from '../services/simpleChat'
 import { useThemeStore } from '../store/themeStore'
 
@@ -25,6 +26,7 @@ interface Props {
 
 export default function Chat({ onSend, emptyState, initialMessages }: Props) {
   const accentColor = useThemeStore((s) => s.accentColor)
+  const { bottom } = useSafeAreaInsets()
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages ?? [])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -84,12 +86,13 @@ export default function Chat({ onSend, emptyState, initialMessages }: Props) {
         )}
       />
 
-      <View style={styles.inputRow}>
+      <View style={[styles.inputRow, { paddingBottom: Math.max(bottom, 12) }]}>
         <TextInput
           style={styles.input}
           value={input}
           onChangeText={setInput}
           placeholder="Escribe un mensaje..."
+          placeholderTextColor="#9ca3af"
           editable={!streaming}
           multiline
           onSubmitEditing={handleSend}
@@ -129,7 +132,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
     gap: 8,

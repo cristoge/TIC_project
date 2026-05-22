@@ -75,6 +75,12 @@ export default function Login() {
           <Text style={styles.buttonText}>Entrar</Text>
         )}
       </Pressable>
+
+      <Pressable style={styles.registerLink} onPress={() => router.push('/(auth)/register')}>
+        <Text style={styles.registerLinkText}>
+          ¿No tienes cuenta? <Text style={styles.registerLinkBold}>Crear cuenta</Text>
+        </Text>
+      </Pressable>
     </KeyboardAvoidingView>
   )
 }
@@ -121,4 +127,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  registerLink: { marginTop: 24, alignItems: 'center' },
+  registerLinkText: { fontSize: 14, color: '#6b7280' },
+  registerLinkBold: { color: '#2563eb', fontWeight: '600' },
 })
