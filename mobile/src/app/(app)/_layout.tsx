@@ -9,6 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/authStore";
 import { useThemeStore } from "../../store/themeStore";
 import { getUserDocuments, deleteDocument, renameDocument, Document } from "../../services/documents";
+import PaywallModal from "../../components/PaywallModal";
 
 
 function CustomDrawerContent() {
@@ -21,6 +22,7 @@ function CustomDrawerContent() {
   const [selected, setSelected] = useState<Document | null>(null);
   const [renamingDoc, setRenamingDoc] = useState(false);
   const [renameDocValue, setRenameDocValue] = useState('');
+  const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
     getUserDocuments(userId!)
@@ -55,6 +57,17 @@ function CustomDrawerContent() {
         >
           <Ionicons name="create-outline" size={20} color={accentColor} />
           <Text style={[styles.newChatText, { color: accentColor }]}>Nuevo chat</Text>
+        </Pressable>
+
+        <View style={styles.divider} />
+
+        {/* Código */}
+        <Pressable onPress={() => setShowPaywall(true)} style={styles.navItem}>
+          <Ionicons name="code-slash-outline" size={22} color={accentColor} />
+          <Text style={styles.navItemText}>Código</Text>
+          <View style={styles.proBadge}>
+            <Text style={styles.proBadgeText}>PRO</Text>
+          </View>
         </Pressable>
 
         <View style={styles.divider} />
@@ -99,6 +112,8 @@ function CustomDrawerContent() {
           <Ionicons name="settings-outline" size={22} color="#6b7280" />
         </Pressable>
       </View>
+
+      <PaywallModal visible={showPaywall} onClose={() => setShowPaywall(false)} />
 
       {/* Modal documento */}
       <Modal visible={!!selected} transparent animationType="fade" onRequestClose={() => { setSelected(null); setRenamingDoc(false); }}>
@@ -175,6 +190,34 @@ const styles = StyleSheet.create({
   createBtnText: { fontSize: 15, fontWeight: "600", color: "#fff" },
   cancelBtn: { paddingVertical: 13, borderRadius: 10, backgroundColor: "#f3f4f6", alignItems: "center" },
   cancelText: { fontSize: 15, color: "#374151" },
+  proBadge: { backgroundColor: "#fbbf24", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  proBadgeText: { fontSize: 10, fontWeight: "700", color: "#fff", letterSpacing: 0.5 },
+  paywallBackdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)" },
+  paywallSheet: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 28,
+    gap: 14,
+    alignItems: "center",
+  },
+  paywallIcon: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: "#111827",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  paywallTitle: { fontSize: 22, fontWeight: "700", color: "#111827", textAlign: "center" },
+  paywallSubtitle: { fontSize: 14, color: "#6b7280", textAlign: "center", lineHeight: 21 },
+  paywallFeatures: { width: "100%", gap: 10, marginVertical: 4 },
+  paywallFeatureRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  paywallFeatureText: { fontSize: 14, color: "#374151" },
+  paywallBtn: { width: "100%", paddingVertical: 15, borderRadius: 12, alignItems: "center" },
+  paywallBtnText: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  paywallCancel: { fontSize: 14, color: "#9ca3af", paddingVertical: 8 },
 });
 
 export default function Layout() {

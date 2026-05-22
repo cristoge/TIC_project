@@ -8,6 +8,7 @@ import { router } from 'expo-router'
 import { useAuthStore } from '../../store/authStore'
 import { useThemeStore, ACCENT_COLORS, AccentColor } from '../../store/themeStore'
 import { getMe, updateMe } from '../../services/user'
+import PaywallModal from '../../components/PaywallModal'
 
 function Row({
   icon,
@@ -63,6 +64,7 @@ export default function Settings() {
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState('')
   const [saving, setSaving] = useState(false)
+  const [showPaywall, setShowPaywall] = useState(false)
 
   useEffect(() => {
     getMe(token!)
@@ -122,11 +124,11 @@ export default function Settings() {
         <View style={styles.sectionBox}>
           <Row icon="mail-outline" label="Email" value={email} />
           <Sep />
-          <Row icon="star-outline" label="Subscription" value="FREE" />
+          <Row icon="star-outline" label="Subscription" value="FREE" onPress={() => setShowPaywall(true)} />
           <Sep />
           <Row icon="refresh-outline" label="Restore Purchases" />
           <Sep />
-          <Pressable style={[styles.row, styles.rowLast]}>
+          <Pressable style={[styles.row, styles.rowLast]} onPress={() => setShowPaywall(true)}>
             <Ionicons name="arrow-up-circle-outline" size={20} color={accentColor} />
             <Text style={[styles.rowLabel, { color: accentColor, fontWeight: '600' }]}>Upgrade</Text>
             <Ionicons name="chevron-forward" size={16} color="#d1d5db" />
@@ -182,6 +184,8 @@ export default function Settings() {
         </View>
 
       </ScrollView>
+
+      <PaywallModal visible={showPaywall} onClose={() => setShowPaywall(false)} />
 
       {/* Modal editar nombre */}
       <Modal visible={editingName} transparent animationType="fade" onRequestClose={() => setEditingName(false)}>
