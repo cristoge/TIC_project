@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   View, Text, FlatList, Pressable, ActivityIndicator,
   StyleSheet, Modal, TextInput, KeyboardAvoidingView, Platform,
@@ -20,15 +20,38 @@ export default function ProjectDetail() {
 
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  function startPolling() {
+    if (pollRef.current) return
+    pollRef.current = setInterval(async () => {
+      const docs = await getDocuments(id!).catch(() => null)
+      if (!docs) return
+      setDocuments(docs)
+      const stillProcessing = docs.some((d) => d.processing_status === 'processing')
+      if (!stillProcessing) stopPolling()
+    }, 3000)
+  }
+
+  function stopPolling() {
+    if (pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+  }
 
   useEffect(() => {
     setLoading(true)
     setDocuments([])
     setError(null)
     getDocuments(id!)
-      .then(setDocuments)
+      .then((docs) => {
+        setDocuments(docs)
+        if (docs.some((d) => d.processing_status === 'processing')) startPolling()
+      })
       .catch(() => setError('No se pudieron cargar los documentos'))
       .finally(() => setLoading(false))
+    return () => stopPolling()
   }, [id])
 
   async function handlePickDocument() {
@@ -63,6 +86,7 @@ export default function ProjectDetail() {
       await uploadDocument(id!, uri, nombre)
       const docs = await getDocuments(id!)
       setDocuments(docs)
+      startPolling()
     } finally {
       setUploading(false)
     }
@@ -102,10 +126,13 @@ export default function ProjectDetail() {
             <Ionicons name="document-text-outline" size={24} color="#2563eb" />
             <View style={styles.rowInfo}>
               <Text style={styles.rowTitle} numberOfLines={1}>{item.nombre}</Text>
-              {item.processing_status !== 'ready' && (
-                <Text style={styles.rowStatus}>{item.processing_status}</Text>
+              {item.processing_status === 'processing' && (
+                <Text style={styles.rowStatus}>Procesando...</Text>
               )}
             </View>
+            {item.processing_status === 'processing' && (
+              <ActivityIndicator size="small" color="#9ca3af" />
+            )}
             <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
           </Pressable>
         )}
