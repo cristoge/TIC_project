@@ -16,6 +16,5 @@ supabase_admin = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 embedding_model = OllamaEmbeddings(
     model="nomic-embed-text-v2-moe",
     dimensions=512,
-    base_url=OLLAMA_URL,
 )
-chat_model = ChatOllama(model="gemma4:e4b", base_url=OLLAMA_URL)
+chat_model = ChatOllama(model="gemma4:31b", base_url=OLLAMA_URL)

@@ -5,6 +5,7 @@ export interface Project {
   nombre: string
   descripcion: string
   user_id: string
+  created_at?: string
 }
 
 export async function getProjects(userId: string): Promise<Project[]> {

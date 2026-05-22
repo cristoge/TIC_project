@@ -15,22 +15,28 @@ def process_document(document_id: str, pdf_source: str):
         for i, (chunk, vector) in enumerate(zip(chunks, vectors)):
             chunk_row = (
                 supabase.table("document_chunks")
-                .insert({
-                    "document_id": document_id,
-                    "contenido": chunk.page_content,
-                    "numero_chunk": i,
-                    "tokens_count": len(chunk.page_content.split()),
-                })
+                .insert(
+                    {
+                        "document_id": document_id,
+                        "contenido": chunk.page_content,
+                        "numero_chunk": i,
+                        "tokens_count": len(chunk.page_content.split()),
+                    }
+                )
                 .execute()
             )
             chunk_id = chunk_row.data[0]["id"]
-            supabase.table("embeddings").insert({
-                "chunk_id": chunk_id,
-                "vector": vector,
-                "modelo_embedding": "nomic-embed-text-v2-moe",
-            }).execute()
+            supabase.table("embeddings").insert(
+                {
+                    "chunk_id": chunk_id,
+                    "vector": vector,
+                    "modelo_embedding": "nomic-embed-text-v2-moe",
+                }
+            ).execute()
 
-        supabase.table("documents").update({"processing_status": "completed"}).eq("id", document_id).execute()
+        supabase.table("documents").update({"processing_status": "completed"}).eq(
+            "id", document_id
+        ).execute()
         print(f"Ingesta completada: {len(chunks)} chunks procesados")
 
     except Exception as e:
