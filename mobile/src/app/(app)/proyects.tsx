@@ -15,6 +15,7 @@ import {
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '../../store/authStore'
+import { useThemeStore } from '../../store/themeStore'
 import { getProjects, createProject, deleteProject, Project } from '../../services/projects'
 
 const { width } = Dimensions.get('window')
@@ -38,6 +39,7 @@ function timeAgo(dateStr?: string): string {
 
 export default function Projects() {
   const userId = useAuthStore((s) => s.userId)
+  const accentColor = useThemeStore((s) => s.accentColor)
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -136,7 +138,7 @@ export default function Projects() {
             }
             onLongPress={() => setSelectedProject(item)}
           >
-            <Ionicons name="folder-outline" size={40} color="#2563eb" />
+            <Ionicons name="folder-outline" size={40} color={accentColor} />
             <Text style={styles.cardTitle} numberOfLines={2}>{item.nombre}</Text>
             {item.created_at ? (
               <Text style={styles.cardTime}>{timeAgo(item.created_at)}</Text>
@@ -145,7 +147,7 @@ export default function Projects() {
         )}
       />
 
-      <Pressable style={styles.fab} onPress={openModal}>
+      <Pressable style={[styles.fab, { backgroundColor: accentColor }]} onPress={openModal}>
         <Ionicons name="add" size={30} color="#fff" />
       </Pressable>
 
@@ -178,14 +180,14 @@ export default function Projects() {
           {formError && <Text style={styles.errorText}>{formError}</Text>}
 
           <Pressable
-            style={[styles.button, saving && styles.buttonDisabled]}
+            style={[styles.button, { backgroundColor: accentColor }, saving && styles.buttonDisabled]}
             onPress={handleCreate}
             disabled={saving}
           >
             {saving
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.buttonText}>Crear</Text>
-            }
+              : <Text style={styles.buttonText}>Crear</Text>}
+
           </Pressable>
         </KeyboardAvoidingView>
       </Modal>

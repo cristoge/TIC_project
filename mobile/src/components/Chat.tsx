@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native'
 import { ChatMessage } from '../services/simpleChat'
+import { useThemeStore } from '../store/themeStore'
 
 interface Props {
   onSend: (
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export default function Chat({ onSend, emptyState, initialMessages }: Props) {
+  const accentColor = useThemeStore((s) => s.accentColor)
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages ?? [])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -69,7 +71,12 @@ export default function Chat({ onSend, emptyState, initialMessages }: Props) {
         ListEmptyComponent={emptyState ? <>{emptyState}</> : null}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
         renderItem={({ item }) => (
-          <View style={[styles.bubble, item.role === 'user' ? styles.userBubble : styles.aiBubble]}>
+          <View style={[
+            styles.bubble,
+            item.role === 'user'
+              ? [styles.userBubble, { backgroundColor: accentColor }]
+              : styles.aiBubble,
+          ]}>
             <Text style={[styles.bubbleText, item.role === 'user' && styles.userText]}>
               {item.content}
             </Text>
@@ -88,7 +95,7 @@ export default function Chat({ onSend, emptyState, initialMessages }: Props) {
           onSubmitEditing={handleSend}
         />
         <Pressable
-          style={[styles.sendButton, (streaming || !input.trim()) && styles.sendDisabled]}
+          style={[styles.sendButton, { backgroundColor: accentColor }, (streaming || !input.trim()) && styles.sendDisabled]}
           onPress={handleSend}
           disabled={streaming || !input.trim()}
         >

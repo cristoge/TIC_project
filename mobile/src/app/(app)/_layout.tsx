@@ -7,11 +7,13 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../../store/authStore";
+import { useThemeStore } from "../../store/themeStore";
 import { getUserDocuments, deleteDocument, renameDocument, Document } from "../../services/documents";
 
 
 function CustomDrawerContent() {
   const userId = useAuthStore((s) => s.userId);
+  const accentColor = useThemeStore((s) => s.accentColor);
 
   const [recientes, setRecientes] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,8 +53,8 @@ function CustomDrawerContent() {
           onPress={() => router.push({ pathname: "/(app)/home", params: { newChat: Date.now() } })}
           style={styles.newChat}
         >
-          <Ionicons name="create-outline" size={20} color="#2563eb" />
-          <Text style={styles.newChatText}>Nuevo chat</Text>
+          <Ionicons name="create-outline" size={20} color={accentColor} />
+          <Text style={[styles.newChatText, { color: accentColor }]}>Nuevo chat</Text>
         </Pressable>
 
         <View style={styles.divider} />
@@ -62,7 +64,7 @@ function CustomDrawerContent() {
           onPress={() => router.push("/(app)/proyects")}
           style={styles.navItem}
         >
-          <Ionicons name="folder-outline" size={22} color="#2563eb" />
+          <Ionicons name="folder-outline" size={22} color={accentColor} />
           <Text style={styles.navItemText}>Proyectos</Text>
           <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
         </Pressable>
@@ -176,12 +178,15 @@ const styles = StyleSheet.create({
 });
 
 export default function Layout() {
+  const accentColor = useThemeStore((s) => s.accentColor)
   return (
     <Drawer
       drawerContent={() => <CustomDrawerContent />}
       screenOptions={{
         drawerStyle: { width: 280 },
         overlayColor: "rgba(0,0,0,0.4)",
+        headerTintColor: accentColor,
+        headerTitleStyle: { color: '#111827' },
       }}
     >
       <Drawer.Screen name="home" options={{ title: "Home" }} />

@@ -6,10 +6,12 @@ import {
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import * as DocumentPicker from 'expo-document-picker'
+import { useThemeStore } from '../../../store/themeStore'
 import { getDocuments, uploadDocument, deleteDocument, Document } from '../../../services/documents'
 
 export default function ProjectDetail() {
   const { id } = useLocalSearchParams<{ id: string; nombre: string }>()
+  const accentColor = useThemeStore((s) => s.accentColor)
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -123,7 +125,7 @@ export default function ProjectDetail() {
             }
             onLongPress={() => setSelectedDoc(item)}
           >
-            <Ionicons name="document-text-outline" size={24} color="#2563eb" />
+            <Ionicons name="document-text-outline" size={24} color={accentColor} />
             <View style={styles.rowInfo}>
               <Text style={styles.rowTitle} numberOfLines={1}>{item.nombre}</Text>
               {item.processing_status === 'processing' && (
@@ -140,7 +142,7 @@ export default function ProjectDetail() {
       />
 
       {/* FAB subir documento */}
-      <Pressable style={styles.fab} onPress={handlePickDocument} disabled={uploading}>
+      <Pressable style={[styles.fab, { backgroundColor: accentColor }]} onPress={handlePickDocument} disabled={uploading}>
         {uploading
           ? <ActivityIndicator color="#fff" />
           : <Ionicons name="add" size={30} color="#fff" />
@@ -191,7 +193,7 @@ export default function ProjectDetail() {
               autoFocus
             />
             <Pressable
-              style={[styles.confirmBtn, !uploadNombre.trim() && styles.confirmBtnDisabled]}
+              style={[styles.confirmBtn, { backgroundColor: accentColor }, !uploadNombre.trim() && styles.confirmBtnDisabled]}
               onPress={confirmUpload}
               disabled={!uploadNombre.trim()}
             >

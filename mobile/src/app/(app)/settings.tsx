@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useAuthStore } from '../../store/authStore'
+import { useThemeStore, ACCENT_COLORS, AccentColor } from '../../store/themeStore'
 import { getMe, updateMe } from '../../services/user'
 
 function Row({
@@ -52,6 +53,8 @@ export default function Settings() {
   const token = useAuthStore((s) => s.token)
   const logout = useAuthStore((s) => s.logout)
   const storeSetNombre = useAuthStore((s) => s.setNombre)
+  const accentColor = useThemeStore((s) => s.accentColor)
+  const setAccentColor = useThemeStore((s) => s.setAccentColor)
 
   const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
@@ -99,7 +102,7 @@ export default function Settings() {
 
         {/* Profile header */}
         <View style={styles.profileWrap}>
-          <View style={styles.avatar}>
+          <View style={[styles.avatar, { backgroundColor: accentColor }]}>
             <Text style={styles.avatarText}>{initials(nombre)}</Text>
           </View>
           <View style={styles.profileInfo}>
@@ -123,7 +126,11 @@ export default function Settings() {
           <Sep />
           <Row icon="refresh-outline" label="Restore Purchases" />
           <Sep />
-          <Row icon="arrow-up-circle-outline" label="Upgrade" blue last />
+          <Pressable style={[styles.row, styles.rowLast]}>
+            <Ionicons name="arrow-up-circle-outline" size={20} color={accentColor} />
+            <Text style={[styles.rowLabel, { color: accentColor, fontWeight: '600' }]}>Upgrade</Text>
+            <Ionicons name="chevron-forward" size={16} color="#d1d5db" />
+          </Pressable>
         </View>
 
         {/* Theme */}
@@ -131,7 +138,19 @@ export default function Settings() {
         <View style={styles.sectionBox}>
           <Row icon="moon-outline" label="Appearance" value="System" />
           <Sep />
-          <Row icon="color-palette-outline" label="Accent Color" value="Blue" last />
+          <View style={styles.colorRow}>
+            <Ionicons name="color-palette-outline" size={20} color="#6b7280" />
+            <Text style={styles.colorLabel}>Accent Color</Text>
+            <View style={styles.colorDots}>
+              {ACCENT_COLORS.map((c) => (
+                <Pressable
+                  key={c.value}
+                  onPress={() => setAccentColor(c.value as AccentColor)}
+                  style={[styles.colorDot, { backgroundColor: c.value }, accentColor === c.value && styles.colorDotSelected]}
+                />
+              ))}
+            </View>
+          </View>
         </View>
 
         {/* App Settings */}
@@ -182,7 +201,7 @@ export default function Settings() {
               editable={!saving}
             />
             <Pressable
-              style={[styles.saveBtn, (!nameInput.trim() || saving) && styles.saveBtnDisabled]}
+              style={[styles.saveBtn, { backgroundColor: accentColor }, (!nameInput.trim() || saving) && styles.saveBtnDisabled]}
               onPress={handleSaveName}
               disabled={!nameInput.trim() || saving}
             >
@@ -301,4 +320,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelText: { fontSize: 15, color: '#374151' },
+  colorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  colorLabel: { flex: 1, fontSize: 15, color: '#111827' },
+  colorDots: { flexDirection: 'row', gap: 10 },
+  colorDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+  },
+  colorDotSelected: {
+    borderWidth: 3,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 4,
+  },
 })
