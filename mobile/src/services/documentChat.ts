@@ -1,7 +1,7 @@
 import { ChatMessage } from './simpleChat'
 import { streamNDJSON } from './stream'
 
-const API_URL = 'http://127.0.0.1:8000'
+import { API_URL } from './config'
 
 export async function getDocumentHistory(documentId: string): Promise<ChatMessage[]> {
   const res = await fetch(`${API_URL}/chat/${documentId}/messages`)

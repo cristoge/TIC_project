@@ -146,9 +146,9 @@ export default function Settings() {
             <View style={styles.colorDots}>
               {ACCENT_COLORS.map((c) => (
                 <Pressable
-                  key={c.value}
-                  onPress={() => setAccentColor(c.value as AccentColor)}
-                  style={[styles.colorDot, { backgroundColor: c.value }, accentColor === c.value && styles.colorDotSelected]}
+                  key={c.hex}
+                  onPress={() => setAccentColor(c.hex as AccentColor)}
+                  style={[styles.colorDot, { backgroundColor: c.hex }, accentColor === c.hex && styles.colorDotSelected]}
                 />
               ))}
             </View>

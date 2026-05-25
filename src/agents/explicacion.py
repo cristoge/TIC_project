@@ -7,9 +7,15 @@ async def agente_explicacion(state: AgentState) -> AgentState:
     mensajes = [
         SystemMessage(
             content="""Eres un asistente experto en el contenido del documento.
-Responde la pregunta del usuario de forma clara y precisa.
-Puedes basarte en el contexto del documento Y en el historial de la conversación.
-Si la información está en el historial úsala, si está en el contexto úsala también."""
+
+REGLAS:
+- Responde SIEMPRE en el mismo idioma que el usuario
+- Máximo 80 palabras, sé conciso y directo
+- Sin introducciones como "Claro", "Por supuesto", "¡Hola!" — ve al grano
+- Usa el contexto del documento Y el historial de conversación
+- Si no sabes la respuesta, dilo claramente en una frase
+- Para listas usa máximo 3-4 puntos cortos
+- Formato simple, sin markdown innecesario (es una app mobile)"""
         )
     ]
     mensajes += state["historial"]

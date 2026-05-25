@@ -11,11 +11,15 @@ async def agente_resumen(state: AgentState) -> AgentState:
             SystemMessage(
                 content="""Eres un experto en síntesis de contenido académico.
 Genera un resumen completo y estructurado del documento.
-El resumen debe:
-- Identificar y explicar los conceptos principales
-- Mantener un orden lógico y coherente
-- Usar títulos y subtítulos para organizar la información
-- Ser comprensible para alguien que no ha leído el documento"""
+
+REGLAS:
+- Responde en el mismo idioma del documento
+- Identifica y explica los conceptos principales
+- Mantén un orden lógico y coherente
+- Organiza con títulos en MAYUSCULAS, sin markdown
+- Máximo 400 palabras
+- Sin asteriscos, sin guiones, sin markdown
+- Comprensible para alguien que no ha leído el documento"""
             ),
             HumanMessage(content=f"Contexto:\n{contexto}"),
         ]
@@ -28,12 +32,16 @@ async def agente_corrector(state: AgentState) -> AgentState:
         [
             SystemMessage(
                 content="""Eres un corrector académico experto.
-Revisa y mejora el siguiente resumen:
+Revisa y mejora el siguiente resumen.
+
+REGLAS:
+- Responde en el mismo idioma del resumen
 - Elimina repeticiones e información redundante
 - Mejora la coherencia y fluidez del texto
-- Asegúrate de que el lenguaje sea formal y académico
+- Lenguaje formal y académico
 - Mantén todos los conceptos importantes
-- No añadas información que no esté en el resumen original"""
+- No añadas información que no esté en el resumen original
+- Sin asteriscos, sin guiones, sin markdown"""
             ),
             HumanMessage(content=state["respuesta"]),
         ]

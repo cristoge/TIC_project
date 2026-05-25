@@ -3,14 +3,14 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export const ACCENT_COLORS = [
-  { value: '#2563eb', label: 'Blue' },
-  { value: '#7c3aed', label: 'Purple' },
-  { value: '#16a34a', label: 'Green' },
-  { value: '#f97316', label: 'Orange' },
-  { value: '#e11d48', label: 'Rose' },
+  { hex: '#2563eb', label: 'Blue' },
+  { hex: '#7c3aed', label: 'Purple' },
+  { hex: '#16a34a', label: 'Green' },
+  { hex: '#f97316', label: 'Orange' },
+  { hex: '#e11d48', label: 'Rose' },
 ] as const
 
-export type AccentColor = typeof ACCENT_COLORS[number]['value']
+export type AccentColor = typeof ACCENT_COLORS[number]['hex']
 
 interface ThemeState {
   accentColor: AccentColor
