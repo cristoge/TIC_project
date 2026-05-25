@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -32,6 +32,46 @@ export default function Chat({ onSend, emptyState, initialMessages }: Props) {
   const [streaming, setStreaming] = useState(false)
   const listRef = useRef<FlatList>(null)
 
+  const bufferRef = useRef('')
+  const streamEndedRef = useRef(false)
+  const typingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (typingTimerRef.current) clearInterval(typingTimerRef.current)
+    }
+  }, [])
+
+  function scrollToBottom() {
+    requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: false }))
+  }
+
+  function startTyping() {
+    if (typingTimerRef.current) return
+    typingTimerRef.current = setInterval(() => {
+      if (bufferRef.current.length === 0) {
+        if (streamEndedRef.current) {
+          clearInterval(typingTimerRef.current!)
+          typingTimerRef.current = null
+          setStreaming(false)
+        }
+        return
+      }
+      // Tamaño adaptativo: si el backend va muy adelantado, escribimos más rápido
+      const chunkSize = Math.max(1, Math.ceil(bufferRef.current.length / 90))
+      const chunk = bufferRef.current.slice(0, chunkSize)
+      bufferRef.current = bufferRef.current.slice(chunkSize)
+
+      setMessages((prev) => {
+        const updated = [...prev]
+        const last = updated[updated.length - 1]
+        updated[updated.length - 1] = { ...last, content: last.content + chunk }
+        return updated
+      })
+      scrollToBottom()
+    }, 25)
+  }
+
   async function handleSend() {
     const text = input.trim()
     if (!text || streaming) return
@@ -43,19 +83,22 @@ export default function Chat({ onSend, emptyState, initialMessages }: Props) {
     setInput('')
     setStreaming(true)
 
+    bufferRef.current = ''
+    streamEndedRef.current = false
+
     await onSend(
       text,
       historial,
       (token) => {
-        setMessages((prev) => {
-          const updated = [...prev]
-          const last = updated[updated.length - 1]
-          updated[updated.length - 1] = { ...last, content: last.content + token }
-          return updated
-        })
-        listRef.current?.scrollToEnd({ animated: false })
+        bufferRef.current += token
+        startTyping()
       },
-      () => setStreaming(false)
+      () => {
+        streamEndedRef.current = true
+        if (!typingTimerRef.current && bufferRef.current.length === 0) {
+          setStreaming(false)
+        }
+      }
     )
   }
 
@@ -71,7 +114,8 @@ export default function Chat({ onSend, emptyState, initialMessages }: Props) {
         keyExtractor={(_, i) => String(i)}
         contentContainerStyle={styles.list}
         ListEmptyComponent={emptyState ? <>{emptyState}</> : null}
-        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+        onContentSizeChange={scrollToBottom}
+        onLayout={scrollToBottom}
         renderItem={({ item }) => (
           <View style={[
             styles.bubble,

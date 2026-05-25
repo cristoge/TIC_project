@@ -46,6 +46,7 @@ export default function Login() {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#9ca3af"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -56,6 +57,7 @@ export default function Login() {
       <TextInput
         style={styles.input}
         placeholder="Contraseña"
+        placeholderTextColor="#9ca3af"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -106,6 +108,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     marginBottom: 14,
+    color: '#111827',
   },
   error: {
     color: '#ef4444',
