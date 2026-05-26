@@ -6,7 +6,9 @@ from config import chat_model
 
 async def agente_chat(state: SimpleState) -> SimpleState:
     mensajes = [
-        SystemMessage(content="Eres un asistente útil. Responde de forma clara y concisa.")
+        SystemMessage(
+            content="Eres un asistente útil. Responde de forma clara y concisa."
+        )
     ]
 
     for msg in state["historial"]:

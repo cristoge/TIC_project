@@ -1,11 +1,8 @@
-from typing import TypedDict
+from typing import TypedDict, Annotated
+import operator
 
 
 class AgentState(TypedDict):
     query: str
     document_id: str
-    tipo_agente: str
-    contexto: str
-    respuesta: str
-    historial: list
-    test_data: dict
+    messages: Annotated[list, operator.add]  # acumula el loop orquestador ↔ tools
