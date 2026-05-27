@@ -168,7 +168,9 @@ const styles = StyleSheet.create({
   },
   aiBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: '#f3f4f6',
+    //backgroundColor: '#f3f4f6',
+    //maxWidth: '85%',
+    maxWidth: '90%',
   },
   bubbleText: { fontSize: 15, color: '#111827', lineHeight: 22 },
   userText: { color: '#fff' },
