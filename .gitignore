@@ -72,3 +72,8 @@ Thumbs.db
 # Jupyter (si lo usas)
 # =========================
 .ipynb_checkpoints/
+
+# =========================
+# Tooling caches
+# =========================
+.pytest_cache/

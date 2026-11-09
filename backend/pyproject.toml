@@ -1,0 +1,17 @@
+[project]
+name = "study-rag-backend"
+version = "0.1.0"
+description = "Backend for the study RAG app: ingestion, hybrid search, study tools and the Strands agent."
+requires-python = ">=3.13"
+dependencies = [
+    "psycopg[binary]>=3.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
