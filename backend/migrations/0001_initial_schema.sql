@@ -199,7 +199,8 @@ create function hybrid_search(
   p_query_text      text,
   p_query_embedding vector(512),
   p_candidates      int default 40,
-  p_rrf_k           int default 60
+  p_rrf_k           int default 60,
+  p_document_ids    uuid[] default null              -- optional filter: only these documents
 )
 returns table (chunk_id uuid, document_id uuid, document_name text, page_number int,
                content text, rrf_score float, semantic_similarity float)
@@ -211,6 +212,7 @@ language sql stable as $$
     from document_chunks c
     join documents d on d.id = c.document_id
     where d.project_id = p_project_id and d.status = 'ready'
+      and (p_document_ids is null or d.id = any(p_document_ids))
     order by c.embedding <=> p_query_embedding
     limit p_candidates
   ),
@@ -225,6 +227,7 @@ language sql stable as $$
     join documents d on d.id = c.document_id
     cross join query
     where d.project_id = p_project_id and d.status = 'ready'
+      and (p_document_ids is null or d.id = any(p_document_ids))
       and c.content_tsv @@ query.q
     order by ts_rank_cd(c.content_tsv, query.q) desc
     limit p_candidates
