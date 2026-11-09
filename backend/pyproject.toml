@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Backend for the study RAG app: ingestion, hybrid search, study tools and the Strands agent."
 requires-python = ">=3.13"
 dependencies = [
+    "boto3>=1.43.126",
     "psycopg[binary]>=3.2",
+    "pymupdf>=2.1",
 ]
 
 [dependency-groups]
