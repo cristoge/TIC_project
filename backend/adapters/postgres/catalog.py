@@ -223,7 +223,7 @@ class PostgresCatalog:
                 return None
             messages = conn.execute(
                 "select id, role, content, summary_id, flashcard_deck_id, quiz_id, created_at from chat_messages "
-                "where conversation_id = %s order by created_at, role desc",
+                "where conversation_id = %s order by created_at, role",  # enum order: user before assistant
                 (conversation_id,),
             ).fetchall()
             sources = conn.execute(

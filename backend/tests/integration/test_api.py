@@ -314,6 +314,20 @@ def test_conversations_list_messages_with_their_sources(api, conn):
     assert messages[1]["sources"] == [{"n": 1, "document_id": document_id, "document_name": "Tema3.pdf", "page": 12}]
 
 
+def test_a_question_and_answer_with_the_same_timestamp_are_listed_question_first(api, conn):
+    project_id = _project(api)
+    conversation_id = api.client.post(f"/projects/{project_id}/conversations", json={}).json()["id"]
+    with conn.transaction():  # now() is the same for both rows
+        conn.execute("insert into chat_messages (conversation_id, role, content) values (%s, 'user', 'Q')", (conversation_id,))
+        conn.execute(
+            "insert into chat_messages (conversation_id, role, content) values (%s, 'assistant', 'A')", (conversation_id,)
+        )
+
+    messages = api.client.get(f"/conversations/{conversation_id}/messages").json()
+
+    assert [m["role"] for m in messages] == ["user", "assistant"]
+
+
 def test_other_users_conversations_are_not_found(api):
     project_id = _project(api)
     conversation_id = api.client.post(f"/projects/{project_id}/conversations", json={}).json()["id"]

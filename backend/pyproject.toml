@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Backend for the study RAG app: ingestion, hybrid search, study tools and the Strands agent."
 requires-python = ">=3.13"
 dependencies = [
+    "bedrock-agentcore>=1.25.4",
     "boto3>=1.43.126",
     "fastapi>=0.162.2",
     "mangum>=0.22.0",

@@ -43,6 +43,17 @@ export COGNITO_ISSUER=https://cognito-idp.eu-central-1.amazonaws.com/<pool-id> C
 uv run uvicorn entrypoints.api.main:local_app --factory --reload
 ```
 
+## Chat agent
+
+Strands agent (agentic RAG) served by AgentCore Runtime from `entrypoints/agent/app.py`.
+
+- **Request**: `POST /invocations` with `{"conversation_id": "<uuid>", "message": "..."}` and the Cognito ID token in `Authorization: Bearer ...` (create the conversation first with `POST /projects/{id}/conversations`).
+- **Response**: SSE stream of JSON events: `token` (text as it is generated), `sources` (only the passages cited as `[n]`, with document and page), `artifact` (`summary` / `flashcards` / `quiz` created in this turn, with its id), `end` (the saved message id), or a single `error` (`unauthenticated`, `invalid_request`, `not_found`, `internal`).
+- **Tools**: `search_documents(query, document_ids?)`, `list_documents()`, `create_summary(document_id)`, `create_flashcards(document_id, count, topic?)`, `create_quiz(document_id, count, topic?)`. User and project come from the server-side request state, never from the model; any document id the model passes is checked against the project.
+- **Model**: Nova 2 Lite, temperature 0.2, at most 6 turns per request (Strands `limits`).
+- **History**: the newest messages of the conversation that fit in ~16,000 characters; only text and cited sources are stored, not tool calls.
+- **Auth**: deployed, AgentCore's inbound JWT authorizer validates the token and `AUTH_VALIDATED_UPSTREAM=true` makes the agent read its claims; locally, set `COGNITO_ISSUER` and `COGNITO_CLIENT_ID` and run `uv run python -m entrypoints.agent.app` (serves `:8080`).
+
 ## Layout
 
 | Path | Contents |
@@ -57,6 +68,11 @@ uv run uvicorn entrypoints.api.main:local_app --factory --reload
 | `adapters/bedrock/structured_llm.py` | `StrandsStructuredLLM`: one-shot structured output with Strands on Bedrock (Nova 2 Lite by default) |
 | `adapters/postgres/study.py` | `PostgresStudyRepository` for summaries, decks, quizzes and attempts |
 | `entrypoints/api/` | REST API: `app.py` (routes), `schemas.py` (contract), `auth.py` (Cognito claims / local JWT validation), `main.py` (wiring, Lambda handler via Mangum) |
+| `services/chat.py` | `ChatService.chat(...)`: one turn (history → agent → stream → persist) and the event protocol |
+| `services/agent_tools.py` | What the agent can do (search, list, create study artifacts) and `TurnRecorder` (citation numbers, artifacts) |
+| `adapters/bedrock/agent_runner.py` | `StrandsAgentRunner`, the system prompt and the Strands tool wrappers |
+| `adapters/postgres/conversations.py` | Conversation ownership, history within a character budget, saving a turn (messages, sources, artifacts, title) |
+| `entrypoints/agent/` | `handler.py` (identity, payload validation, error events) and `app.py` (AgentCore wiring) |
 | `adapters/postgres/catalog.py` | Owner-scoped queries for the REST API |
 | `adapters/sqs/queue.py` | `SqsJobQueue`: queues study generation jobs |
 | `entrypoints/generation/handler.py` | Lambda handler for study jobs `{"kind": "summary" \| "flashcards" \| "quiz", "id": ...}` delivered through SQS. Needs `DATABASE_URL` and `DOCUMENTS_BUCKET` |
