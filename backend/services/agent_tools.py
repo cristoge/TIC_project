@@ -6,6 +6,7 @@ project: a passage of a PDF that tries to steer the model ("ignore your
 instructions...") can at most reach the user's own documents.
 """
 
+import threading
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -32,19 +33,22 @@ class TurnRecorder:
 
     sources: list[Source] = field(default_factory=list)
     artifacts: dict[str, str] = field(default_factory=dict)
+    # Strands may run the tools of one model turn in parallel threads.
+    _lock: threading.Lock = field(default_factory=threading.Lock, repr=False, compare=False)
 
     def number(self, results: list[SearchResult]) -> list[tuple[int, SearchResult]]:
         """Give each passage a citation number, reusing it when the same chunk shows up again."""
-        known = {source.chunk_id: source.n for source in self.sources}
-        numbered = []
-        for result in results:
-            if result.chunk_id not in known:
-                known[result.chunk_id] = len(self.sources) + 1
-                self.sources.append(
-                    Source(known[result.chunk_id], result.chunk_id, result.document_id, result.document_name, result.page_number)
-                )
-            numbered.append((known[result.chunk_id], result))
-        return numbered
+        with self._lock:
+            known = {source.chunk_id: source.n for source in self.sources}
+            numbered = []
+            for result in results:
+                if result.chunk_id not in known:
+                    known[result.chunk_id] = len(self.sources) + 1
+                    self.sources.append(
+                        Source(known[result.chunk_id], result.chunk_id, result.document_id, result.document_name, result.page_number)
+                    )
+                numbered.append((known[result.chunk_id], result))
+            return numbered
 
 
 class ProjectDocuments(Protocol):

@@ -2,7 +2,7 @@
 
 Payload: {"conversation_id": "<uuid>", "message": "..."}; the response is a stream of
 the events described in services/chat.py, or a single error event:
-  {"type": "error", "code": "unauthenticated" | "invalid_request" | "not_found" | "internal", "message": "..."}
+  {"type": "error", "code": "unauthenticated" | "invalid_request" | "not_found" | "no_answer" | "internal", "message": "..."}
 """
 
 import logging
@@ -12,7 +12,7 @@ from collections.abc import AsyncIterator
 import jwt
 
 from entrypoints.api.auth import CurrentUser, InvalidToken, JwtVerifier
-from services.chat import ConversationNotFound
+from services.chat import ConversationNotFound, InvalidChatRequest
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ async def run_chat(chat, user: CurrentUser | None, payload: dict) -> AsyncIterat
             yield event
     except ConversationNotFound:
         yield _error("not_found", "Conversation not found.")
-    except ValueError as error:
+    except InvalidChatRequest as error:
         yield _error("invalid_request", str(error))
     except Exception:
         logger.exception("Chat turn failed for conversation %s", conversation_id)

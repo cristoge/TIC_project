@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from entrypoints.agent.handler import identify, run_chat
 from entrypoints.api.auth import CurrentUser, JwtVerifier
-from services.chat import ConversationNotFound
+from services.chat import ConversationNotFound, InvalidChatRequest
 
 KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 ISSUER, CLIENT = "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_T", "client"
@@ -78,8 +78,12 @@ def test_service_errors_become_error_events():
     assert _run(FakeChat(ConversationNotFound()), USER, {"conversation_id": CONVERSATION, "message": "x"}) == [
         {"type": "error", "code": "not_found", "message": "Conversation not found."}
     ]
-    assert _run(FakeChat(ValueError("The message is empty.")), USER, {"conversation_id": CONVERSATION, "message": " "}) == [
+    assert _run(FakeChat(InvalidChatRequest("The message is empty.")), USER, {"conversation_id": CONVERSATION, "message": " "}) == [
         {"type": "error", "code": "invalid_request", "message": "The message is empty."}
+    ]
+    # Any other ValueError is internal: its text must not reach the client.
+    assert _run(FakeChat(ValueError("psycopg detail")), USER, {"conversation_id": CONVERSATION, "message": "x"}) == [
+        {"type": "error", "code": "internal", "message": "Something went wrong. Please try again."}
     ]
     assert _run(FakeChat(RuntimeError("Bedrock down")), USER, {"conversation_id": CONVERSATION, "message": "x"}) == [
         {"type": "error", "code": "internal", "message": "Something went wrong. Please try again."}

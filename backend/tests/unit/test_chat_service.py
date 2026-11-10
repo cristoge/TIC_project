@@ -3,7 +3,7 @@ import asyncio
 import pytest
 
 from services.agent_tools import Source
-from services.chat import ChatService, ConversationNotFound, HistoryMessage
+from services.chat import ChatService, ConversationNotFound, HistoryMessage, InvalidChatRequest
 
 
 class FakeConversations:
@@ -125,5 +125,18 @@ def test_someone_elses_conversation_is_not_found_and_nothing_runs():
 def test_empty_or_too_long_messages_are_rejected(message):
     service = ChatService(FakeConversations(), FakeRunner(["x"]))
 
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidChatRequest):
         _collect(service, user_id="u1", conversation_id="c-1", message=message)
+
+
+def test_a_blank_answer_still_announces_created_artifacts_but_saves_nothing():
+    conversations = FakeConversations()
+    service = ChatService(conversations, FakeRunner([], artifacts={"summary": "s1"}))
+
+    events = _collect(service, user_id="u1", conversation_id="c-1", message="Resume el tema 3")
+
+    assert events == [
+        {"type": "artifact", "kind": "summary", "id": "s1"},
+        {"type": "error", "code": "no_answer", "message": "No answer could be produced. Please try again."},
+    ]
+    assert conversations.saved is None

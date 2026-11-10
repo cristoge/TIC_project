@@ -562,14 +562,18 @@ Las tools de creación **devuelven solo una confirmación**: si devolvieran el c
 - **Todo `document_id` que pase el modelo se valida** contra el proyecto. Un PDF puede contener texto malicioso (*prompt injection*); así el alcance queda limitado a los documentos de ese proyecto.
 - System prompt: responder **solo** con información recuperada, citar con `[n]`, y decir claramente cuando algo no está en los documentos.
 
-### Eventos del streaming (NDJSON)
+### Eventos del streaming (SSE)
+
+AgentCore Runtime envía cada evento como un mensaje SSE (`data: <json>`):
 
 ```
 {"type":"token","data":"La mitosis..."}
-{"type":"sources","data":[{"n":1,"document":"Tema3.pdf","page":12}]}
+{"type":"sources","data":[{"n":1,"document_id":"<id>","document_name":"Tema3.pdf","page":12}]}
 {"type":"artifact","kind":"summary|flashcards|quiz","id":"<id>"}
 {"type":"end","message_id":"..."}
 ```
+
+Solo se envían (y guardan) las fuentes citadas como `[n]` en la respuesta. Si el agente no produce texto (por ejemplo, el límite de turnos corta un bucle de tools), en lugar de `end` llega `{"type":"error","code":"no_answer",...}` y no se guarda nada. Otros errores: `unauthenticated`, `invalid_request`, `not_found`, `internal`.
 
 ---
 

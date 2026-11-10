@@ -5,6 +5,8 @@ Stream events (sent to the app over SSE by AgentCore Runtime):
   {"type": "sources", "data": [{"n", "document_id", "document_name", "page"}]}   cited passages only
   {"type": "artifact", "kind": "summary" | "flashcards" | "quiz", "id": "..."}  created in this turn
   {"type": "end", "message_id": "..."}
+or, when the agent produced no text (e.g. the turn limit stopped a tool loop), instead of "end":
+  {"type": "error", "code": "no_answer", "message": "..."}   and nothing is saved
 """
 
 import re
@@ -18,8 +20,15 @@ MAX_MESSAGE_CHARS = 4000
 CITATION = re.compile(r"\[(\d+)\]")
 
 
+NO_ANSWER_MESSAGE = "No answer could be produced. Please try again."
+
+
 class ConversationNotFound(Exception):
     pass
+
+
+class InvalidChatRequest(Exception):
+    """A problem with the user's input; its message is safe to show to the user."""
 
 
 @dataclass(frozen=True)
@@ -57,9 +66,9 @@ class ChatService:
     async def chat(self, user_id: str, conversation_id: str, message: str) -> AsyncIterator[dict]:
         message = message.strip()
         if not message:
-            raise ValueError("The message is empty.")
+            raise InvalidChatRequest("The message is empty.")
         if len(message) > MAX_MESSAGE_CHARS:
-            raise ValueError(f"The message is longer than {MAX_MESSAGE_CHARS} characters.")
+            raise InvalidChatRequest(f"The message is longer than {MAX_MESSAGE_CHARS} characters.")
         project_id = self.conversations.project_of(user_id, conversation_id)
         if project_id is None:
             raise ConversationNotFound()
@@ -73,6 +82,14 @@ class ChatService:
             chunks.append(chunk)
             yield {"type": "token", "data": chunk}
         answer = "".join(chunks)
+
+        if not answer.strip():
+            # A blank answer must never be stored: replayed as history, Bedrock rejects blank text
+            # and the conversation would stay broken. Artifacts already created are still announced.
+            for kind, artifact_id in recorder.artifacts.items():
+                yield {"type": "artifact", "kind": kind, "id": artifact_id}
+            yield {"type": "error", "code": "no_answer", "message": NO_ANSWER_MESSAGE}
+            return
 
         cited = {int(n) for n in CITATION.findall(answer)}
         sources = [source for source in recorder.sources if source.n in cited]
