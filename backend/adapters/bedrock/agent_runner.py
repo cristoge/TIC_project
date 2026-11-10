@@ -1,11 +1,10 @@
-"""The chat agent with Strands on Bedrock: Nova 2 Lite plus the project tools."""
+"""The chat agent with Strands: the model (Nova 2 Lite on Bedrock, or DeepSeek locally) plus the project tools."""
 
 from collections.abc import AsyncIterator
 
 from strands import Agent, ToolContext, tool
-from strands.models import BedrockModel
 
-from adapters.bedrock.structured_llm import NOVA_2_LITE
+from adapters.llm_models import ModelFactory, bedrock_model_factory
 from services.agent_tools import AgentTools
 from services.chat import HistoryMessage
 
@@ -29,28 +28,19 @@ class StrandsAgentRunner:
     def __init__(
         self,
         tools: AgentTools,
-        model_id: str = NOVA_2_LITE,
+        model_factory: ModelFactory | None = None,
         temperature: float = CHAT_TEMPERATURE,
         max_turns: int = MAX_TURNS,
-        region_name: str | None = None,
         boto_client_config=None,
     ):
         self.tools = tools
-        self.model_id = model_id
+        self.model_factory = model_factory or bedrock_model_factory(boto_client_config=boto_client_config)
         self.temperature = temperature
         self.max_turns = max_turns
-        self.region_name = region_name
-        self.boto_client_config = boto_client_config
 
     async def stream(self, history: list[HistoryMessage], message: str, invocation_state: dict) -> AsyncIterator[str]:
-        model = BedrockModel(
-            model_id=self.model_id,
-            temperature=self.temperature,
-            region_name=self.region_name,
-            boto_client_config=self.boto_client_config,
-        )
         agent = Agent(
-            model=model,
+            model=self.model_factory(self.temperature),
             system_prompt=SYSTEM_PROMPT,
             tools=strands_tools(self.tools),
             messages=[{"role": m.role, "content": [{"text": m.content}]} for m in history],

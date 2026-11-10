@@ -13,6 +13,45 @@ uv run pytest                    # unit and integration tests
 
 Integration tests create a throwaway database per test on the local Postgres and drop it afterwards. Point them at another server with `TEST_DATABASE_URL`.
 
+## Run everything locally
+
+`APP_ENV=local` swaps the AWS services for local ones; only the DeepSeek API and Cognito stay remote (see `entrypoints/local.py`):
+
+| Piece | AWS | Local |
+|-------|-----|-------|
+| LLM | Nova 2 Lite (Bedrock) | DeepSeek API |
+| Embeddings | Titan V2 | Ollama (`embeddinggemma-2:270m`, 512 d) |
+| Reranker | Cohere Rerank 3.5 | none: hybrid (RRF) order |
+| Files | S3 | `LOCAL_STORAGE_DIR` + `POST /local-uploads` (same form the app gets from S3) |
+| Generation jobs | SQS + Lambda | background threads in the API process |
+| Database | RDS | docker compose |
+| Users | Cognito | the same Cognito user pool (`infra/auth`) |
+
+Embeddings from different models cannot be mixed: a database ingested locally must be searched locally.
+
+```bash
+docker compose up -d --wait db                 # from the repository root
+ollama pull embeddinggemma-2:270m              # once
+cd backend
+cp .env.local.example .env.local               # fill in DEEPSEEK_API_KEY and the Cognito values
+set -a; source .env.local; set +a
+uv run python -m scripts.migrate               # create the schema
+uv run uvicorn entrypoints.api.main:local_app --factory --reload   # REST API on :8000
+uv run python -m entrypoints.agent.app         # chat agent on :8080 (another terminal, same env)
+```
+
+Try it with a token from `uv run python -m scripts.get_token you@example.com` (see `infra/README.md`):
+
+```bash
+H="Authorization: Bearer $TOKEN"
+P=$(curl -s -H "$H" -H 'Content-Type: application/json' -d '{"name":"TFE"}' localhost:8000/projects | jq -r .id)
+R=$(curl -s -H "$H" -H 'Content-Type: application/json' -d '{"name":"paper.pdf","size_bytes":100000}' localhost:8000/projects/$P/documents)
+curl -s -F "key=$(echo $R | jq -r .upload.fields.key)" -F "file=@../docs/paper_overleaf.pdf;type=application/pdf" localhost:8000/local-uploads
+curl -s -H "$H" localhost:8000/documents/$(echo $R | jq -r .document.id)       # wait for "status": "ready"
+C=$(curl -s -H "$H" -H 'Content-Type: application/json' -d '{}' localhost:8000/projects/$P/conversations | jq -r .id)
+curl -N -H "$H" -H 'Content-Type: application/json' -d "{\"conversation_id\":\"$C\",\"message\":\"¿Qué base de datos se usa?\"}" localhost:8080/invocations
+```
+
 ## REST API
 
 FastAPI app in `entrypoints/api/`. The full contract (bodies, status codes) is the OpenAPI document at `/docs` when running locally; request and response models live in `entrypoints/api/schemas.py`.

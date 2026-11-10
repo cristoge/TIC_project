@@ -6,7 +6,6 @@ import json
 import pytest
 from strands.models import Model
 
-import adapters.bedrock.agent_runner as agent_runner
 from adapters.bedrock.agent_runner import StrandsAgentRunner, strands_tools
 from domain.search import SearchResult
 from services.agent_tools import AgentTools, TurnRecorder
@@ -71,14 +70,13 @@ class ScriptedModel(Model):
 
 
 def _run(monkeypatch, model, history=()):
-    monkeypatch.setattr(agent_runner, "BedrockModel", lambda **kwargs: model)
     search = Search()
     tools = AgentTools(Docs(), search, Unused(), Unused())
     recorder = TurnRecorder()
     state = {"user_id": "u1", "project_id": PROJECT, "conversation_id": "cv", "recorder": recorder}
 
     async def collect():
-        return [c async for c in StrandsAgentRunner(tools).stream(list(history), "pregunta", state)]
+        return [c async for c in StrandsAgentRunner(tools, model_factory=lambda temperature: model).stream(list(history), "pregunta", state)]
 
     return asyncio.run(collect()), recorder, search
 

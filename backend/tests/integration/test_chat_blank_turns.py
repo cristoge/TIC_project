@@ -5,7 +5,6 @@ Runs the real Strands runner with a scripted model, ChatService and the Postgres
 
 import pytest
 
-import adapters.bedrock.agent_runner as agent_runner
 from adapters.bedrock.agent_runner import StrandsAgentRunner
 from entrypoints.agent.handler import run_chat
 from services.chat import ChatService
@@ -17,8 +16,7 @@ NO_ANSWER = {"type": "error", "code": "no_answer", "message": "No answer could b
 
 
 def _chat(monkeypatch, repo, tools, model):
-    monkeypatch.setattr(agent_runner, "BedrockModel", lambda **kwargs: model)
-    return ChatService(repo, StrandsAgentRunner(tools))
+    return ChatService(repo, StrandsAgentRunner(tools, model_factory=lambda temperature: model))
 
 
 def _history(repo, conversation_id):

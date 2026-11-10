@@ -52,6 +52,12 @@ def build_container() -> Container:
 
 
 def local_app():
+    """Run on the developer's machine. With APP_ENV=local nothing but DeepSeek and Cognito is remote
+    (see entrypoints/local.py); without it, the AWS services are used from the local process."""
+    from entrypoints.local import is_local, local_api_app
+
+    if is_local():
+        return local_api_app()
     verifier = JwtVerifier(issuer=os.environ["COGNITO_ISSUER"], client_id=os.environ["COGNITO_CLIENT_ID"])
     return create_app(build_container(), jwt_verifier=verifier)
 

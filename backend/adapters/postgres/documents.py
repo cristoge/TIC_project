@@ -17,6 +17,11 @@ class PostgresDocumentRepository:
             row = conn.execute("select id from documents where s3_key = %s", (s3_key,)).fetchone()
         return str(row[0]) if row else None
 
+    def status_of(self, document_id: str) -> str | None:
+        with psycopg.connect(self.conninfo) as conn:
+            row = conn.execute("select status from documents where id = %s", (document_id,)).fetchone()
+        return row[0] if row else None
+
     def mark_processing(self, document_id: str) -> None:
         self._set_status(document_id, "processing", None)
 

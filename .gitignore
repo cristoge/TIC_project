@@ -88,3 +88,7 @@ Thumbs.db
 tfplan
 plan.out
 *.tfvars
+
+# Local mode data
+.local-data/
+.env.local

@@ -21,6 +21,11 @@ app = BedrockAgentCoreApp()
 
 @cache
 def _chat_and_verifier():
+    from entrypoints.local import is_local, local_chat, local_verifier
+
+    if is_local():
+        return local_chat(), local_verifier()
+
     import boto3
     from botocore.config import Config
 

@@ -31,7 +31,7 @@ class Reranker(Protocol):
 class SearchService:
     index: SearchIndex
     embedder: Embedder
-    reranker: Reranker
+    reranker: Reranker | None  # None (local mode): keep the hybrid order
     candidates: int = 40
     top_k: int = 8
 
@@ -47,6 +47,8 @@ class SearchService:
         candidates = self.index.hybrid_search(project_id, query, embedding, self.candidates, document_ids)
         if not candidates:
             return []
+        if self.reranker is None:
+            return candidates[: self.top_k]
         try:
             ranking = self.reranker.rerank(query, [c.content for c in candidates], self.top_k)
         except Exception:

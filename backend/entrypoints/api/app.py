@@ -34,10 +34,17 @@ class Container:
     queue: JobQueue
 
 
-def create_app(container: Container, jwt_verifier: JwtVerifier | None = None) -> FastAPI:
-    """`jwt_verifier` is for local runs; without it the user comes from API Gateway's Cognito authorizer."""
+def create_app(container: Container, jwt_verifier: JwtVerifier | None = None, local_uploads=None) -> FastAPI:
+    """`jwt_verifier` is for local runs; without it the user comes from API Gateway's Cognito authorizer.
+
+    `local_uploads` (local mode only) adds POST /local-uploads, which plays the S3 bucket.
+    """
     app = FastAPI(title="Study RAG API", version="0.1.0")
+    app.state.container = container
     app.state.jwt_verifier = jwt_verifier
+    app.state.local_uploads = local_uploads
+    if local_uploads is not None:
+        _add_local_upload_route(app, local_uploads)
 
     def user(request: Request, current: CurrentUser = Depends(get_current_user)) -> CurrentUser:
         container.catalog.ensure_user(current.id, current.email)  # first request creates the row
@@ -205,3 +212,18 @@ def create_app(container: Container, jwt_verifier: JwtVerifier | None = None) ->
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     return app
+
+
+def _add_local_upload_route(app: FastAPI, uploads) -> None:
+    from fastapi import File, Form, UploadFile
+
+    from entrypoints.api.local_uploads import UploadRejected
+
+    @app.post("/local-uploads", status_code=status.HTTP_204_NO_CONTENT, include_in_schema=False)
+    async def local_upload(key: str = Form(...), file: UploadFile = File(...)):
+        content = await file.read()
+        try:
+            uploads.receive(key, content, file.content_type)
+        except UploadRejected as error:
+            raise HTTPException(status_code=error.status_code, detail=error.detail) from error
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
