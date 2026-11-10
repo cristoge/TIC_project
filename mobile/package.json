@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo-google-fonts/geist": "^0.4.2",
     "@expo/ui": "~58.0.27",
+    "@tanstack/react-query": "^5.107.1",
     "expo": "~58.0.23",
     "expo-constants": "~58.0.15",
     "expo-device": "~58.0.5",
@@ -49,7 +50,8 @@
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "api:types": "uv --directory ../backend run python -m scripts.export_openapi ../mobile/src/shared/api/openapi.json && npx --yes openapi-typescript@7.13.0 src/shared/api/openapi.json -o src/shared/api/schema.d.ts"
   },
   "private": true,
   "jest": {

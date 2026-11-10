@@ -5,17 +5,20 @@ import {
   Geist_700Bold,
   useFonts,
 } from "@expo-google-fonts/geist";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
+import { createQueryClient } from "@/shared/api";
 import { fonts, useTheme } from "@/shared/theme";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const theme = useTheme();
+  const [queryClient] = useState(createQueryClient);
   const [loaded, error] = useFonts({
     Geist_400Regular,
     Geist_500Medium,
@@ -32,7 +35,7 @@ export default function RootLayout() {
   if (!ready) return null;
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <StatusBar style={theme.scheme === "dark" ? "light" : "dark"} />
       <Stack
         screenOptions={{
@@ -43,6 +46,6 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: theme.colors.background },
         }}
       />
-    </>
+    </QueryClientProvider>
   );
 }
