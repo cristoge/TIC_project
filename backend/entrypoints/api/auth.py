@@ -31,7 +31,15 @@ class JwtVerifier:
     def verify(self, token: str) -> CurrentUser:
         try:
             key = self.jwks_client.get_signing_key_from_jwt(token).key
-            claims = jwt.decode(token, key, algorithms=["RS256"], audience=self.client_id, issuer=self.issuer)
+            claims = jwt.decode(
+                token,
+                key,
+                algorithms=["RS256"],
+                audience=self.client_id,
+                issuer=self.issuer,
+                # PyJWT only checks a claim when it is present unless it is required here.
+                options={"require": ["exp", "iss", "aud", "sub", "email", "token_use"]},
+            )
         except jwt.PyJWTError as error:
             raise InvalidToken(str(error)) from error
         if claims.get("token_use") != "id":

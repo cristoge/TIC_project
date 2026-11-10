@@ -29,8 +29,17 @@ class ProjectIn(BaseModel):
 
 
 class ProjectUpdate(BaseModel):
+    """Only the fields sent are changed; `description: null` clears it, `name` cannot be null."""
+
     name: str | None = Field(default=None, min_length=1, max_length=100)
     description: str | None = Field(default=None, max_length=500)
+
+    @field_validator("name")
+    @classmethod
+    def name_cannot_be_null(cls, name: str | None) -> str:
+        if name is None:
+            raise ValueError("The project name cannot be null.")
+        return name
 
 
 class ProjectOut(BaseModel):

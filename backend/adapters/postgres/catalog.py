@@ -6,6 +6,7 @@ and never reveals that it exists.
 """
 
 import psycopg
+from psycopg import sql
 from psycopg.rows import dict_row
 
 OWNED_DOCUMENT = "documents d join projects p on p.id = d.project_id"
@@ -59,14 +60,20 @@ class PostgresCatalog:
             ).fetchone()
 
     def update_project(self, user_id: str, project_id: str, changes: dict) -> dict | None:
+        """Set exactly the fields present in `changes`; an explicit None clears a nullable field."""
+        assignments = [
+            sql.SQL("{} = {}").format(sql.Identifier(column), sql.Placeholder(column))
+            for column in ("name", "description")
+            if column in changes
+        ]
+        if not assignments:
+            assignments = [sql.SQL("name = name")]  # nothing to change: still answer with the owned row
+        query = sql.SQL(
+            "update projects set {} where id = %(id)s and user_id = %(user_id)s "
+            "returning id, name, description, created_at, updated_at"
+        ).format(sql.SQL(", ").join(assignments))
         with self._connect() as conn:
-            return conn.execute(
-                "update projects set name = coalesce(%(name)s, name), "
-                "description = coalesce(%(description)s, description) "
-                "where id = %(id)s and user_id = %(user_id)s "
-                "returning id, name, description, created_at, updated_at",
-                {"name": changes.get("name"), "description": changes.get("description"), "id": project_id, "user_id": user_id},
-            ).fetchone()
+            return conn.execute(query, {**changes, "id": project_id, "user_id": user_id}).fetchone()
 
     def delete_project(self, user_id: str, project_id: str) -> list[dict] | None:
         """Delete the project; return its documents' (id, s3_key) so their files can be removed."""
