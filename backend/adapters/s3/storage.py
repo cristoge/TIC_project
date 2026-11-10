@@ -16,6 +16,22 @@ class S3DocumentStorage:
         with self.client.get_object(Bucket=self.bucket, Key=s3_key)["Body"] as body:
             return body.read()
 
+    def create_upload(self, s3_key: str, max_bytes: int, expires_in: int = 900) -> dict:
+        """Presigned POST: unlike a presigned PUT, it can enforce the content type and a size limit."""
+        return self.client.generate_presigned_post(
+            Bucket=self.bucket,
+            Key=s3_key,
+            Fields={"Content-Type": "application/pdf"},
+            Conditions=[{"Content-Type": "application/pdf"}, ["content-length-range", 1, max_bytes]],
+            ExpiresIn=expires_in,
+        )
+
+    def delete_document_objects(self, document_id: str, s3_key: str) -> None:
+        self.client.delete_objects(
+            Bucket=self.bucket,
+            Delete={"Objects": [{"Key": s3_key}, {"Key": pages_key(document_id)}]},
+        )
+
     def load_pages(self, document_id: str) -> list[Page]:
         with self.client.get_object(Bucket=self.bucket, Key=pages_key(document_id))["Body"] as body:
             return [Page(number=item["number"], text=item["text"]) for item in json.loads(body.read())]

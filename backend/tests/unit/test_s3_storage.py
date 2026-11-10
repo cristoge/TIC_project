@@ -25,6 +25,39 @@ def test_read_pdf_returns_the_object_bytes():
         assert S3DocumentStorage(client, "docs").read_pdf("users/u/projects/p/doc.pdf") == b"%PDF-1.7"
 
 
+def _signing_client():
+    return boto3.client(
+        "s3", region_name="eu-central-1", aws_access_key_id="test", aws_secret_access_key="test"
+    )
+
+
+def test_create_upload_restricts_type_and_size():
+    upload = S3DocumentStorage(_signing_client(), "docs").create_upload("users/u/projects/p/d.pdf", max_bytes=1000)
+
+    assert upload["url"].startswith("https://docs.s3")
+    assert upload["fields"]["key"] == "users/u/projects/p/d.pdf"
+    assert upload["fields"]["Content-Type"] == "application/pdf"
+    policy = json.loads(__import__("base64").b64decode(upload["fields"]["policy"]))
+    assert ["content-length-range", 1, 1000] in policy["conditions"]
+    assert {"Content-Type": "application/pdf"} in policy["conditions"]
+
+
+def test_delete_document_objects_removes_the_pdf_and_its_page_texts():
+    client = _client()
+    with Stubber(client) as stub:
+        stub.add_response(
+            "delete_objects",
+            {},
+            expected_params={
+                "Bucket": "docs",
+                "Delete": {"Objects": [{"Key": "users/u/projects/p/d.pdf"}, {"Key": "documents/d/pages.json"}]},
+            },
+        )
+
+        S3DocumentStorage(client, "docs").delete_document_objects("d", "users/u/projects/p/d.pdf")
+        stub.assert_no_pending_responses()
+
+
 def test_load_pages_reads_back_the_saved_page_texts():
     client = _client()
     data = json.dumps([{"number": 1, "text": "Uno"}, {"number": 2, "text": "Dos"}]).encode()
