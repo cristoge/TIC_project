@@ -81,6 +81,13 @@ def _run(monkeypatch, model, history=()):
     return asyncio.run(collect()), recorder, search
 
 
+def test_system_prompt_asks_for_limited_markdown():
+    from adapters.bedrock.agent_runner import SYSTEM_PROMPT
+
+    assert "limited Markdown only: **bold** for key terms and short bullet lists" in SYSTEM_PROMPT
+    assert "No headings, tables, code blocks or links." in SYSTEM_PROMPT
+
+
 def test_tool_schemas_expose_no_identity_or_project():
     tools = strands_tools(AgentTools(Docs(), Search(), Unused(), Unused()))
     names = {t.tool_spec["name"]: t.tool_spec["inputSchema"]["json"].get("properties", {}) for t in tools}

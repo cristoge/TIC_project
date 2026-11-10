@@ -573,7 +573,7 @@ AgentCore Runtime envía cada evento como un mensaje SSE (`data: <json>`):
 {"type":"end","message_id":"..."}
 ```
 
-Solo se envían (y guardan) las fuentes citadas como `[n]` en la respuesta. Si el agente no produce texto (por ejemplo, el límite de turnos corta un bucle de tools), en lugar de `end` llega `{"type":"error","code":"no_answer",...}` y no se guarda nada. Otros errores: `unauthenticated`, `invalid_request`, `not_found`, `internal`.
+El texto de `token` viene en **Markdown limitado** (solo negrita y listas cortas, sin títulos, tablas, bloques de código ni enlaces): la app debe mostrarlo formateado. Solo se envían (y guardan) las fuentes citadas como `[n]` en la respuesta. Si el agente no produce texto (por ejemplo, el límite de turnos corta un bucle de tools), en lugar de `end` llega `{"type":"error","code":"no_answer",...}` y no se guarda nada. Otros errores: `unauthenticated`, `invalid_request`, `not_found`, `internal`.
 
 ---
 
