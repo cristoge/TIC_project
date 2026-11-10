@@ -21,6 +21,7 @@ Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-
 | Cognito (un único usuario) | **Desplegado** en `eu-south-2` | `infra/auth/` (Terraform) |
 | Adaptadores AWS (Bedrock, S3, SQS, Lambda, AgentCore) | Escritos y probados, **sin desplegar** | `backend/adapters/`, `backend/entrypoints/` |
 | Infraestructura AWS de la app (`infra/app`) | **Aparcada** | — |
+| Plan y contrato de la app móvil | **Cerrado**, sin empezar a programar | `docs/app/README.md` |
 
 ### Datos que hacen falta para arrancar
 
@@ -54,10 +55,7 @@ TOKEN=$(uv run python -m scripts.get_token 2627_cristopher.marrasquin@iticbcn.ca
 
 ## Mañana, en este orden
 
-1. **Limpiar el repositorio**
-   - Borrar `src/` (backend antiguo con Supabase y LangGraph; queda en el historial de git).
-   - Sustituir `mobile/` por el proyecto Expo nuevo.
-   - Reescribir el `README.md` raíz, que aún describe el proyecto antiguo.
+1. ~~**Limpiar el repositorio**~~ **Hecho (2026-11-10):** borrados `src/` y `requirements.txt` (backend antiguo; quedan en el historial de git), `mobile/` sustituido por un proyecto Expo SDK 58 en blanco y `README.md` raíz reescrito.
 2. **Limpieza de tipado del backend** (aplazada hoy). basedpyright marca 1 error y 119 avisos en `backend/entrypoints/api/app.py`, sin fallos de comportamiento:
    - `-> dict` sin parámetros en el `Protocol` `Storage` (el error);
    - las filas del catálogo como `dict` sin tipar → alias `Row = dict[str, Any]`;
