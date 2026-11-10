@@ -16,6 +16,10 @@ class S3DocumentStorage:
         with self.client.get_object(Bucket=self.bucket, Key=s3_key)["Body"] as body:
             return body.read()
 
+    def load_pages(self, document_id: str) -> list[Page]:
+        with self.client.get_object(Bucket=self.bucket, Key=pages_key(document_id))["Body"] as body:
+            return [Page(number=item["number"], text=item["text"]) for item in json.loads(body.read())]
+
     def save_pages(self, document_id: str, pages: list[Page]) -> None:
         payload = [{"number": page.number, "text": page.text} for page in pages]
         self.client.put_object(
