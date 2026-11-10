@@ -13,22 +13,27 @@ Region `eu-central-1`. Terraform 1.17 (`mise exec terraform@1.17.0 -- terraform 
 
 Only an administrator can create users (open sign-up is off), and users cannot change their email.
 
-```bash
-cd infra/auth
-terraform init
-terraform apply                      # creates the user pool and the app client
+From the repository root:
 
-POOL=$(terraform output -raw user_pool_id)
+```bash
+terraform -chdir=infra/auth init
+terraform -chdir=infra/auth apply    # creates the user pool and the app client
+
+POOL=$(terraform -chdir=infra/auth output -raw user_pool_id)
 EMAIL=you@example.com
 aws cognito-idp admin-create-user --region eu-central-1 --user-pool-id "$POOL" --username "$EMAIL" \
   --user-attributes Name=email,Value="$EMAIL" Name=email_verified,Value=true --message-action SUPPRESS
+read -rs -p "Password (12+ chars, upper, lower, number): " PW; echo   # keeps it out of shell history
 aws cognito-idp admin-set-user-password --region eu-central-1 --user-pool-id "$POOL" --username "$EMAIL" \
-  --password '<at least 12 chars, upper, lower and a number>' --permanent
+  --password "$PW" --permanent
+unset PW
 ```
 
 The user is created outside Terraform on purpose: a password in Terraform would end up in the state file.
 
 ### Use it from the local backend
+
+From the repository root:
 
 ```bash
 export COGNITO_ISSUER=$(terraform -chdir=infra/auth output -raw issuer)

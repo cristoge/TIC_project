@@ -13,7 +13,7 @@ import os
 import sys
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import BotoCoreError, ClientError
 
 
 def get_id_token(client, client_id: str, email: str, password: str) -> str:
@@ -41,7 +41,7 @@ def main() -> int:
 
     try:
         token = get_id_token(boto3.client("cognito-idp", region_name=args.region), client_id, args.email, password)
-    except (ClientError, RuntimeError) as error:
+    except (ClientError, BotoCoreError, RuntimeError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1
     print(token)

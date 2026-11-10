@@ -10,6 +10,11 @@ resource "aws_cognito_user_pool" "this" {
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
 
+  # You@x.com and you@x.com are the same user. Cannot be changed once the pool exists.
+  username_configuration {
+    case_sensitive = false
+  }
+
   admin_create_user_config {
     allow_admin_create_user_only = true
   }
