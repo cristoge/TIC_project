@@ -2,7 +2,7 @@
 
 Rediseño completo del proyecto: se abandona Supabase, LangGraph y Ollama, y el sistema pasa a ejecutarse íntegramente en AWS con un agente de **Strands** (RAG agéntico) desplegado en **Bedrock AgentCore**. El objetivo es un proyecto de portfolio reproducible con un solo comando de despliegue, que se mantiene en marcha unas 2 horas para grabar la demo y después se destruye.
 
-> **Estado:** plan cerrado, **sin implementar**. Rama de trabajo: `migration`. Fecha: 2026-11-09.
+> **Estado (2026-11-10): local primero, AWS aparcado.** El backend está implementado y funciona en local con `APP_ENV=local` (DeepSeek, Ollama, Postgres en Docker, archivos locales; ver `backend/README.md`). De AWS solo se usa **Cognito** (`infra/auth`). Los adaptadores de AWS (Bedrock, S3, SQS, Lambda, AgentCore) siguen en el código y probados, pero no se despliegan; `infra/app` y el despliegue quedan para después. Rama de trabajo: `migration`.
 > La base de datos empieza **vacía** (no se migran datos de Supabase) y la app Expo se **rehace desde cero**.
 
 ## Índice
