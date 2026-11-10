@@ -1,17 +1,14 @@
-import { Text, View, StyleSheet } from "react-native";
+import { Stack } from "expo-router";
 
+import { AppText, Screen } from "@/shared/ui";
+
+// Placeholder until the projects list (T4).
 export default function Index() {
   return (
-    <View style={styles.container}>
-      <Text>Edit src/app/index.tsx to edit this screen.</Text>
-    </View>
+    <Screen>
+      <Stack.Screen options={{ title: "Proyectos" }} />
+      <AppText variant="title">Proyectos</AppText>
+      <AppText color="textMuted">Aquí irá la lista de proyectos.</AppText>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

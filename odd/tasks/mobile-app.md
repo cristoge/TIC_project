@@ -1,7 +1,7 @@
 # Mobile app (Expo, from scratch)
 
 Objective: rebuild the Expo app in `mobile/` against the local backend, following the plan and contract in `docs/app/README.md` (decisions, screens, design tokens, backend contract).
-Branch: `migration` · Delivery strategy: ask-on-risk (chain strategy not chosen yet) · Test runner: `npx jest` in `mobile/`, plus `npx tsc --noEmit` and `npx expo lint`.
+Branch: tracker `feat/mobile-app` (from `migration` at `55dfb45`), one chained branch per slice · Delivery strategy: ask-on-risk, chain strategy **feature-branch-chain** (user, 2026-11-10) · Test runner: `npx jest` in `mobile/`, plus `npx tsc --noEmit` and `npx expo lint`.
 
 ## Specs
 
@@ -17,7 +17,7 @@ Branch: `migration` · Delivery strategy: ask-on-risk (chain strategy not chosen
 
 | ID | Specs | Task | Route | Status | Evidence |
 |----|-------|------|-------|--------|----------|
-| T1 | S1, S3, S4 | Tooling (jest-expo, RNTL, ESLint, Prettier), design tokens + theme (light/dark), Geist, base atoms | inline | pending | |
+| T1 | S1, S3, S4 | Tooling (jest-expo, RNTL, ESLint, Prettier), design tokens + theme (light/dark), Geist, base atoms | inline | done | `dc6cfda` (slice 1), slice 2 commit on `feat/mobile-app-02-ui`; RED `Cannot find module './tokens'`/`'./Button'`/`'./TextField'`; GREEN 21 tests, `tsc`, `expo lint`, `prettier --check`, iOS `expo export` bundle |
 | T2 | S1, S7 | Env config, generated OpenAPI types, HTTP client with bearer token, TanStack Query provider | inline | pending | |
 | T3 | S2 | Cognito login, token storage, refresh on 401, auth-guarded routes, login screen | inline | pending | |
 | T4 | S5 | Projects: list, create, rename, delete | inline | pending | |
@@ -31,3 +31,4 @@ Route evidence: no Writer trigger (tasks depend on each other and share the skel
 ## Log
 
 - **L1** (2026-11-10) — User: "dale el commit y emepcemos con la parte mobile". Plan agreed in this session and written in `docs/app/README.md` (`47aa31a`); repository cleaned and blank Expo SDK 58 app scaffolded (`55dfb45`). Native review offered for both commits (assessed high: deleted old auth code and an executable script); user chose "Omitir esta vez".
+- **L2** (2026-11-10) — Delivery: T1 reached 620 authored lines, so the user chose "Cadena de ramas" (feature-branch-chain). Slices: `feat/mobile-app-01-theme` (tooling, tokens, theme, Geist; 16 tests) and `feat/mobile-app-02-ui` (atoms `AppText`, `Button`, `TextField`, `Card`, `Screen` + placeholder home; 270 lines). Contrast is pinned by tests: every text/background pair ≥ 4.5:1 in both schemes. Findings: TypeScript 6 needs `"types": ["jest"]`; React Native 0.88 no longer exports `StyleSheet.NamedStyles`; RNTL 14 `render` is async; Prettier must skip `assets/` (it rewrote `expo.icon/icon.json`). Native review: slice 1 assessed medium, `under_budget`. Push and PRs (tracker draft PR + chained children) are the user's call.
