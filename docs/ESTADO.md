@@ -1,78 +1,87 @@
 # Estado del proyecto y siguientes pasos
 
-Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-11-10**. Rama: `migration` (subida a GitHub hasta `bb23cf2`).
+Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-11-10 (noche)**. Ramas: `migration` (backend) y la cadena `feat/mobile-app-*` (app), todas subidas a GitHub.
 
-> **En una frase:** el backend nuevo está terminado y funciona en local de principio a fin (DeepSeek + Ollama + Postgres en Docker + Cognito real). AWS está aparcado. **Mañana: limpiar el repositorio y empezar la app Expo nueva.**
+> **En una frase:** el backend funciona en local de principio a fin y la app Expo nueva ya tiene **login, proyectos y documentos** probados en el simulador contra ese backend. **Siguiente: T6, el chat.**
 
 ## Lo que está hecho
 
 | Pieza | Estado | Dónde |
 |---|---|---|
-| Plan de diseño completo | Cerrado | `docs/aws-migration/README.md` |
-| Seguimiento tarea a tarea (specs, tareas, registro) | Al día | `odd/tasks/aws-migration.md` |
-| Backend hexagonal (dominio, servicios, adaptadores, puntos de entrada) | Hecho, 202 tests | `backend/` (ver `backend/README.md`) |
+| Plan de diseño del backend | Cerrado | `docs/aws-migration/README.md` |
+| Backend hexagonal (dominio, servicios, adaptadores, puntos de entrada) | Hecho, 207 tests | `backend/` (ver `backend/README.md`) |
 | Esquema Postgres + pgvector + búsqueda híbrida (RRF) | Hecho | `backend/migrations/0001_initial_schema.sql` |
-| Ingesta de PDFs (páginas → fragmentos → embeddings) | Hecho | `backend/services/ingestion.py` |
-| Búsqueda + reranker (reranker solo en AWS) | Hecho | `backend/services/search.py` |
-| Resumen, flashcards y test con corrección en el servidor | Hecho | `backend/services/study.py` |
-| API REST (25 rutas, aislamiento por usuario) | Hecho | `backend/entrypoints/api/` |
-| Agente Strands (RAG agéntico, citas `[n]`, Markdown limitado) | Hecho | `backend/services/chat.py`, `backend/adapters/bedrock/agent_runner.py` |
+| Ingesta de PDFs, búsqueda, resumen/flashcards/test, API REST, agente Strands | Hecho | `backend/services/`, `backend/entrypoints/` |
 | **Modo local** (`APP_ENV=local`) | **Funciona de principio a fin** | `backend/entrypoints/local.py` |
 | Cognito (un único usuario) | **Desplegado** en `eu-south-2` | `infra/auth/` (Terraform) |
 | Adaptadores AWS (Bedrock, S3, SQS, Lambda, AgentCore) | Escritos y probados, **sin desplegar** | `backend/adapters/`, `backend/entrypoints/` |
+| Plan y contrato de la app móvil | Cerrado | `docs/app/README.md` |
+| **App: base** (tema, átomos, cliente API tipado) | Hecho (T1, T2) | `mobile/src/shared/` |
+| **App: login con Cognito** | **Probado en dispositivo**; la renovación del token tras un 401 ya se ha visto funcionar en real | `mobile/src/features/auth/` |
+| **App: proyectos** (lista, crear, renombrar, eliminar) | **Probado en el simulador** | `mobile/src/features/projects/` |
+| **App: documentos** (subir PDF ≤ 30 MB, estados, renombrar, eliminar) | **Probado en el simulador** con un PDF de 27 MB y 514 páginas | `mobile/src/features/documents/` |
+| App: chat, flashcards y tests, ajustes | **Pendiente** (T6–T8) | `odd/tasks/mobile-app.md` |
 | Infraestructura AWS de la app (`infra/app`) | **Aparcada** | — |
-| Plan y contrato de la app móvil | **Cerrado**, sin empezar a programar | `docs/app/README.md` |
+
+Seguimiento tarea a tarea, con las peticiones literales del autor: `odd/tasks/mobile-app.md` (app) y `odd/tasks/aws-migration.md` (backend). La app tiene 133 tests (`cd mobile && npx jest`).
 
 ### Datos que hacen falta para arrancar
 
 - **Cognito**: User Pool `eu-south-2_zDVGNZqXf`, app client `qdn8v5n4hlmui6ga7kagtpj7b`, perfil `[default]`.
 - **Usuario**: `2627_cristopher.marrasquin@iticbcn.cat`. La contraseña la conoce el autor; no se guarda en el repositorio.
-- **`backend/.env.local`** (no está en git): ya tiene los valores de Cognito. `DEEPSEEK_API_KEY` se toma de la variable de entorno del sistema.
+- **`backend/.env.local`** (no está en git): valores de Cognito y `PUBLIC_BASE_URL`. `DEEPSEEK_API_KEY` se toma de la variable de entorno del sistema.
+- **`mobile/.env.local`** (no está en git): `EXPO_PUBLIC_*`; plantilla en `mobile/.env.example`.
 - **`infra/auth/terraform.tfstate`** (no está en git): **no borrar**; es lo que permite a Terraform gestionar Cognito.
 
-### Arrancar en local
-
-Los pasos completos están en `backend/README.md`, apartado "Run everything locally". En resumen:
+### Arrancar en local con la app
 
 ```bash
+open -a Docker && open -a Ollama                    # Postgres va en Docker; Ollama calcula los embeddings
 docker compose up -d --wait db
 cd backend && set -a && source .env.local && set +a
 uv run python -m scripts.migrate
-uv run uvicorn entrypoints.api.main:local_app --factory --port 8000   # API
-uv run python -m entrypoints.agent.app                                 # agente, :8080
-TOKEN=$(uv run python -m scripts.get_token 2627_cristopher.marrasquin@iticbcn.cat)
+uv run uvicorn entrypoints.api.main:local_app --factory --host 0.0.0.0 --port 8000   # API
+uv run python -m entrypoints.agent.app                                                # agente, :8080 (hará falta en T6)
+cd ../mobile && npx expo start                      # i = simulador de iOS
 ```
+
+**Al cambiar de red, la IP del Mac cambia** (`ipconfig getifaddr en0`) y hay que actualizarla en dos sitios:
+- `mobile/.env.local`: `EXPO_PUBLIC_API_URL` y `EXPO_PUBLIC_AGENT_URL`;
+- `backend/.env.local`: `PUBLIC_BASE_URL` (es la URL a la que la app sube los PDFs; con `127.0.0.1` el móvil se la mandaría a sí mismo). Reiniciar la API después.
+
+La API tiene que escuchar en `0.0.0.0`, no solo en `127.0.0.1`, para que el móvil o el simulador lleguen a ella.
 
 ## Decisiones tomadas (no reabrir sin motivo)
 
 - **Local primero, AWS después.** El código de AWS se queda, aislado en adaptadores; solo Cognito está desplegado.
 - **Terraform** para la infraestructura (no CDK). Región de Cognito: `eu-south-2`.
-- **Modelos**: Nova 2 Lite en AWS, DeepSeek (`deepseek-flash`) en local; embeddings Titan V2 en AWS, Ollama `embeddinggemma-2:270m` en local (512 d). Los embeddings de un entorno no sirven en el otro.
+- **Modelos**: Nova 2 Lite en AWS, DeepSeek (`deepseek-flash`) en local; embeddings Titan V2 en AWS, Ollama `embeddinggemma-2:270m` en local (512 d). Los embeddings de un modelo no sirven con otro.
 - **Troceador propio** (ni LangChain ni semchunk, probados y descartados).
-- **El chat responde en Markdown limitado** (negrita y listas cortas): la app debe mostrar Markdown.
 - **Monorepo**: backend, app, infraestructura y documentación en el mismo repositorio.
 - **Ningún cambio en AWS sin permiso explícito** del autor (despliegues, recursos, llamadas de pago).
+- **App** (detalle en `docs/app/README.md`): solo login con `fetch` directo a Cognito; estética inspirada en Donkey Republic (naranja `#FF6400` solo para acciones, Geist); `StyleSheet` + tokens; Proyectos → `Chats | Documentos | Flashcards`; resumen, flashcards y test como tarjetas en el chat; Markdown con `react-native-marked`.
+- **Límite de PDF: 30 MB** y 20 documentos por proyecto.
+- **Entrega en cadena de ramas** (`feature-branch-chain`): rama de seguimiento `feat/mobile-app` y una rama por porción, cada una partiendo de la anterior.
 
-## Mañana, en este orden
+## Siguiente, en este orden
 
-1. ~~**Limpiar el repositorio**~~ **Hecho (2026-11-10):** borrados `src/` y `requirements.txt` (backend antiguo; quedan en el historial de git), `mobile/` sustituido por un proyecto Expo SDK 58 en blanco y `README.md` raíz reescrito.
-2. **Limpieza de tipado del backend** (aplazada hoy). basedpyright marca 1 error y 119 avisos en `backend/entrypoints/api/app.py`, sin fallos de comportamiento:
-   - `-> dict` sin parámetros en el `Protocol` `Storage` (el error);
-   - las filas del catálogo como `dict` sin tipar → alias `Row = dict[str, Any]`;
-   - dependencias de FastAPI con `Depends(...)` por defecto → `Annotated[..., Depends(...)]`;
-   - parámetro `request` sin usar en `user()`, resultado sin usar de `found(...)` en `grade_quiz`, helpers sin anotar.
-   - Revisar el resto del backend con `uvx basedpyright --pythonpath .venv/bin/python <archivos>`.
-   - Configurar el editor para que use `backend/.venv` (Python 3.13): `[tool.pyright]` con `venvPath = "."`, `venv = ".venv"`, `pythonVersion = "3.13"` en `backend/pyproject.toml`.
-3. **Documento "contrato de la app"** antes de programarla: rutas, formatos y eventos del chat, y estas reglas para que pasar a AWS sea solo configuración:
-   - URLs en variables (`EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_AGENT_URL`); en el móvil, la IP del Mac, no `127.0.0.1` (emulador Android: `10.0.2.2`);
-   - subida de PDFs genérica: enviar **todos** los `fields` de la respuesta y el archivo **el último** (multipart);
-   - enviar siempre el **ID token** de Cognito;
-   - la URL de AgentCore en AWS es distinta y puede requerir una cabecera de sesión (pendiente de confirmar al retomar AWS).
-4. **App Expo nueva** (React Native) contra el backend local.
+1. **T6 — Chat**: conversaciones del proyecto, respuestas por SSE desde el agente (`expo/fetch`), Markdown con citas `[n]` como botones y tarjetas de resumen, flashcards y test. Debe reutilizar el token de la sesión y la renovación tras un 401 (aviso del verificador de la T3). Necesita el agente arrancado en `:8080`.
+2. **T7 — Flashcards y tests**: apartado de flashcards del proyecto, modo estudio, hacer un test y ver el resultado.
+3. **T8 — Ajustes**: nombre, tema y **cerrar sesión** (ahora mismo no hay forma de salir).
+4. **PRs**: abrir el PR de seguimiento en borrador (`feat/mobile-app` → `migration`) y los PRs encadenados de cada porción. Las porciones 5, 9 y 12 pasan de 400 líneas por sus tests: se recomienda aceptarlas como excepción de tamaño.
+5. **Limpieza de tipado del backend** (aplazada): basedpyright marca 1 error y 119 avisos en `backend/entrypoints/api/app.py`, sin fallos de comportamiento (detalle en el historial de git de este documento, versión del 2026-11-10 por la mañana).
+
+## Avisos abiertos de la app
+
+- Al superar los 20 documentos, el mensaje de error llega del servidor en inglés.
+- Mientras un PDF se procesa, la lista se refresca cada 3 s incluso con la app en segundo plano (falta conectar `focusManager` de TanStack Query con `AppState`).
+- Si se pierde la conexión y caduca el token, la renovación falla y la app cierra la sesión (lo pide la especificación, pero es estricto).
+- Renombrar un documento permite quitarle el `.pdf`; no rompe nada (el archivo se guarda por id) y el autor lo deja así de momento.
 
 ## Más adelante
 
-- **Conjunto de evaluación** (necesita PDFs reales del autor): 20–30 preguntas, comparando búsqueda semántica, híbrida e híbrida + reranker. Las métricas ya existen (`backend/evaluation/retrieval.py`). En local se ha visto que sin reranker el mejor fragmento no siempre sale primero.
+- **Conjunto de evaluación** (necesita PDFs reales del autor): 20–30 preguntas, comparando búsqueda semántica, híbrida e híbrida + reranker. Las métricas ya existen (`backend/evaluation/retrieval.py`).
+- **Ollama en el PC de escritorio** (GPU de 16 GB): la ingesta pasa el 98 % del tiempo calculando embeddings (33 s para 367 fragmentos en el M2); basta con apuntar `OLLAMA_URL` al PC, con el mismo modelo.
 - **Retomar AWS** (`infra/app`, despliegue y evaluación completa). Pendientes ya identificados:
   - el autorizador JWT de AgentCore debe usar `allowed_audience` = id del app client (los ID tokens de Cognito no traen `client_id`);
   - `AUTH_VALIDATED_UPSTREAM=true` solo en el runtime de AgentCore;
@@ -81,5 +90,6 @@ TOKEN=$(uv run python -m scripts.get_token 2627_cristopher.marrasquin@iticbcn.ca
 
 ## Notas para quien retome la sesión
 
-- El historial detallado de cada decisión, con las peticiones literales del autor, está en `odd/tasks/aws-migration.md` (sección `## Log`).
-- La revisión nativa de Gentle AI (`gentle-ai review`) está activada; el autor ha elegido omitirla en cada cambio hasta ahora. Para los comandos `review status` hace falta `--untracked-scope=exclude` con el hash de inventario, porque `.atl/` no está en git.
+- **Simulador de iOS**: el runtime de iOS 27.2 ya está instalado. Con los datos del móvil compartidos, macOS pausa descargas grandes (red marcada como cara); hacerlas con wifi.
+- **Expo SDK 58**: el `fetch` global es el de `expo/fetch`, que no acepta archivos como `{ uri, name, type }` en un `FormData`; se usa `File` de `expo-file-system`.
+- La revisión nativa de Gentle AI (`gentle-ai review`) está activada; el autor ha elegido omitirla en cada cambio. Para los comandos `review status` hace falta `--untracked-scope=exclude` con el hash de inventario, porque `.atl/` no está en git.
