@@ -9,7 +9,7 @@ export default function Project() {
   return (
     <>
       <Stack.Screen options={{ title }} />
-      <ProjectScreen />
+      <ProjectScreen projectId={projectId} />
     </>
   );
 }
