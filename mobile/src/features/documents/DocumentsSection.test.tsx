@@ -7,6 +7,7 @@ import { colors } from "@/shared/theme";
 
 import { DocumentsSection } from "./DocumentsSection";
 import { aDocument } from "./testing/documents";
+import { MockFile } from "./testing/fileSystem";
 import { formFields, recordFormData } from "./testing/formData";
 
 const mockApi = createFakeApi();
@@ -14,6 +15,9 @@ const mockGetDocumentAsync = jest.fn();
 const mockFetch = jest.fn();
 
 jest.mock("@/core/api", () => ({ getApi: () => mockApi }));
+jest.mock("expo-file-system", () => ({
+  File: jest.requireActual("./testing/fileSystem").MockFile,
+}));
 jest.mock("expo-document-picker", () => ({
   getDocumentAsync: (...args: unknown[]) => mockGetDocumentAsync(...args),
 }));
@@ -134,7 +138,7 @@ describe("DocumentsSection", () => {
       expect(init).toEqual({ method: "POST", body: expect.anything() });
       expect(formFields(init.body)).toEqual([
         ["key", "k/d2.pdf"],
-        ["file", { uri: picked.uri, name: "Tema 2.pdf", type: "application/pdf" }],
+        ["file", new MockFile(picked.uri)],
       ]);
       expect(mockApi.get).toHaveBeenCalledTimes(2);
       expect(screen.getByRole("button", { name: "Subir PDF" })).toBeEnabled();

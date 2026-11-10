@@ -4,9 +4,13 @@ import { ApiError } from "@/shared/api";
 import { createFakeApi } from "@/shared/testing/query";
 
 import { aDocument } from "./testing/documents";
+import { MockFile } from "./testing/fileSystem";
 import { formFields, recordFormData } from "./testing/formData";
 import { MAX_PDF_BYTES, pickPdf, uploadPdf, type PickedPdf } from "./upload";
 
+jest.mock("expo-file-system", () => ({
+  File: jest.requireActual("./testing/fileSystem").MockFile,
+}));
 jest.mock("expo-document-picker", () => ({ getDocumentAsync: jest.fn() }));
 
 recordFormData();
@@ -48,7 +52,7 @@ describe("uploadPdf", () => {
       ["key", "users/u1/projects/p1/d1.pdf"],
       ["policy", "cG9saWN5"],
       ["x-amz-signature", "sig"],
-      ["file", { uri: pdf.uri, name: "Tema 1.PDF", type: "application/pdf" }],
+      ["file", new MockFile(pdf.uri)],
     ]);
     expect(api.delete).not.toHaveBeenCalled();
   });

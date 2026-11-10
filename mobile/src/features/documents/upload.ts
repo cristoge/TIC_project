@@ -3,6 +3,7 @@
 // `/local-uploads` locally; both take the same multipart form.
 
 import { getDocumentAsync } from "expo-document-picker";
+import { File } from "expo-file-system";
 
 import type { ApiClient } from "@/shared/api";
 
@@ -62,14 +63,14 @@ async function send(
 ): Promise<boolean> {
   const body = new FormData();
   for (const [name, value] of Object.entries(upload.fields)) body.append(name, value);
-  // S3 ignores every field after the file, so it goes last. React Native sends `{ uri, name, type }`
-  // as a file part; the DOM typings only know Blob, hence the cast.
-  const part = { uri: file.uri, name: file.name, type: "application/pdf" };
-  body.append("file", part as unknown as Blob);
+  // S3 ignores every field after the file, so it goes last. Expo's global fetch only accepts Blob
+  // parts (React Native's `{ uri, name, type }` throws), and expo-file-system's File is one.
+  body.append("file", new File(file.uri));
   try {
     const response = await fetch(upload.url, { method: "POST", body });
     return response.ok;
-  } catch {
+  } catch (error) {
+    if (__DEV__) console.warn("PDF upload failed", error);
     return false;
   }
 }
