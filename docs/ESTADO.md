@@ -1,6 +1,6 @@
 # Estado del proyecto y siguientes pasos
 
-Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-11-10 (noche)**. Ramas: `migration` (backend) y la cadena `feat/mobile-app-*` (app), todas subidas a GitHub.
+Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-11-10 (noche)**. Rama: `migration` (backend y app), subida a GitHub.
 
 > **En una frase:** el backend funciona en local de principio a fin y la app Expo nueva ya tiene **login, proyectos y documentos** probados en el simulador contra ese backend. **Siguiente: T6, el chat.**
 
@@ -61,15 +61,14 @@ La API tiene que escuchar en `0.0.0.0`, no solo en `127.0.0.1`, para que el móv
 - **Ningún cambio en AWS sin permiso explícito** del autor (despliegues, recursos, llamadas de pago).
 - **App** (detalle en `docs/app/README.md`): solo login con `fetch` directo a Cognito; estética inspirada en Donkey Republic (naranja `#FF6400` solo para acciones, Geist); `StyleSheet` + tokens; Proyectos → `Chats | Documentos | Flashcards`; resumen, flashcards y test como tarjetas en el chat; Markdown con `react-native-marked`.
 - **Límite de PDF: 30 MB** y 20 documentos por proyecto.
-- **Entrega en cadena de ramas** (`feature-branch-chain`): rama de seguimiento `feat/mobile-app` y una rama por porción, cada una partiendo de la anterior.
+- **Entrega**: commits por funcionalidad directamente en `migration`, sin PRs (proyecto personal; la cadena de ramas se fusionó y se borró el 2026-11-10).
 
 ## Siguiente, en este orden
 
 1. **T6 — Chat**: conversaciones del proyecto, respuestas por SSE desde el agente (`expo/fetch`), Markdown con citas `[n]` como botones y tarjetas de resumen, flashcards y test. Debe reutilizar el token de la sesión y la renovación tras un 401 (aviso del verificador de la T3). Necesita el agente arrancado en `:8080`.
 2. **T7 — Flashcards y tests**: apartado de flashcards del proyecto, modo estudio, hacer un test y ver el resultado.
 3. **T8 — Ajustes**: nombre, tema y **cerrar sesión** (ahora mismo no hay forma de salir).
-4. **PRs**: abrir el PR de seguimiento en borrador (`feat/mobile-app` → `migration`) y los PRs encadenados de cada porción. Las porciones 5, 9 y 12 pasan de 400 líneas por sus tests: se recomienda aceptarlas como excepción de tamaño.
-5. **Limpieza de tipado del backend** (aplazada): basedpyright marca 1 error y 119 avisos en `backend/entrypoints/api/app.py`, sin fallos de comportamiento (detalle en el historial de git de este documento, versión del 2026-11-10 por la mañana).
+4. **Limpieza de tipado del backend** (aplazada): basedpyright marca 1 error y 119 avisos en `backend/entrypoints/api/app.py`, sin fallos de comportamiento (detalle en el historial de git de este documento, versión del 2026-11-10 por la mañana).
 
 ## Avisos abiertos de la app
 
