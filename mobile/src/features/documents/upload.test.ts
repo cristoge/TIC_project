@@ -53,14 +53,14 @@ describe("uploadPdf", () => {
     expect(api.delete).not.toHaveBeenCalled();
   });
 
-  it("accepts a PDF of exactly 25 MB", async () => {
+  it("accepts a PDF of exactly 30 MB", async () => {
     const { api, run } = setup({ ...pdf, size: MAX_PDF_BYTES });
 
     await run();
 
     expect(api.post).toHaveBeenCalledWith("/projects/p1/documents", {
       name: "Tema 1.PDF",
-      size_bytes: 25 * 1024 * 1024,
+      size_bytes: 30 * 1024 * 1024,
     });
   });
 
@@ -83,12 +83,12 @@ describe("uploadPdf", () => {
   });
 
   it.each([
-    ["is over 25 MB", MAX_PDF_BYTES + 1],
+    ["is over 30 MB", MAX_PDF_BYTES + 1],
     ["has an unknown size", undefined],
   ])("rejects a PDF that %s without any request", async (_, size) => {
     const { api, fetch, run } = setup({ ...pdf, size });
 
-    await expect(run()).rejects.toThrow("El PDF supera el límite de 25 MB.");
+    await expect(run()).rejects.toThrow("El PDF supera el límite de 30 MB.");
 
     expect(api.post).not.toHaveBeenCalled();
     expect(fetch).not.toHaveBeenCalled();

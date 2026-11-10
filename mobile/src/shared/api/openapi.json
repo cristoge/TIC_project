@@ -1250,7 +1250,7 @@
           },
           "size_bytes": {
             "type": "integer",
-            "maximum": 26214400.0,
+            "maximum": 31457280.0,
             "minimum": 1.0,
             "title": "Size Bytes"
           }

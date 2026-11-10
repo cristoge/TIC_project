@@ -34,6 +34,6 @@ class LocalUploads:
         if content_type != "application/pdf" or not content.startswith(b"%PDF"):
             raise UploadRejected(422, "Only PDF files are accepted.")
         if len(content) > MAX_UPLOAD_BYTES:
-            raise UploadRejected(413, "The file is larger than 25 MB.")
+            raise UploadRejected(413, f"The file is larger than {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.")
         self.storage.save_upload(key, content)
         self.executor.submit(self.ingestion.ingest, document_id, key)

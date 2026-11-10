@@ -109,7 +109,7 @@ mobile/src/
 2. `POST` multipart a `upload.url` con **todos** los `fields` tal cual y el archivo **el último**, en el campo `file`. Así sirve igual para `/local-uploads` en local y para S3 en AWS.
 3. Consultar `GET /documents/{id}` hasta que `status` sea `ready` o `failed` (`pending` → `processing` → `ready`).
 
-Límites: 25 MB por PDF y 20 documentos por proyecto (`409` al superarlo).
+Límites: 30 MB por PDF y 20 documentos por proyecto (`409` al superarlo).
 
 ### Generaciones en segundo plano
 

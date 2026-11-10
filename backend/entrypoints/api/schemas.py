@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
-MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+MAX_UPLOAD_BYTES = 30 * 1024 * 1024
 MAX_DOCUMENTS_PER_PROJECT = 20
 
 DocumentStatus = Literal["pending", "processing", "ready", "failed"]

@@ -61,7 +61,7 @@ FastAPI app in `entrypoints/api/`. The full contract (bodies, status codes) is t
 | GET, PATCH | `/me` | First request creates the user row from the token (`sub`, `email`) |
 | GET, POST | `/projects` | |
 | PATCH, DELETE | `/projects/{id}` | Delete also removes the documents' files in S3 |
-| GET, POST | `/projects/{id}/documents` | POST `{name, size_bytes}` → pending document + presigned POST `{url, fields}`; PDF only, ≤ 25 MB, ≤ 20 per project (409) |
+| GET, POST | `/projects/{id}/documents` | POST `{name, size_bytes}` → pending document + presigned POST `{url, fields}`; PDF only, ≤ 30 MB, ≤ 20 per project (409) |
 | GET, PATCH, DELETE | `/documents/{id}` | |
 | GET, POST | `/documents/{id}/summaries` | POST → 202, queued; 409 if the document is not `ready` |
 | GET, POST | `/documents/{id}/flashcard-decks` | POST `{count: 1-30, topic?}` → 202, queued |

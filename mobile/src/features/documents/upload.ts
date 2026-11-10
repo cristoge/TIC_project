@@ -8,7 +8,7 @@ import type { ApiClient } from "@/shared/api";
 
 import type { Document, DocumentCreated } from "./api";
 
-export const MAX_PDF_BYTES = 25 * 1024 * 1024;
+export const MAX_PDF_BYTES = 30 * 1024 * 1024;
 
 export type PickedPdf = { uri: string; name: string; size?: number | null };
 
@@ -51,7 +51,7 @@ export async function uploadPdf({
 
 function pdfProblem(file: PickedPdf): string | undefined {
   if (!file.name.toLowerCase().endsWith(".pdf")) return "Solo se pueden subir archivos PDF.";
-  if (file.size == null || file.size > MAX_PDF_BYTES) return "El PDF supera el límite de 25 MB.";
+  if (file.size == null || file.size > MAX_PDF_BYTES) return "El PDF supera el límite de 30 MB.";
   return undefined;
 }
 

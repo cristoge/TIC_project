@@ -145,7 +145,7 @@ def test_only_pdfs_within_the_size_limit_are_accepted(api):
 
     assert api.client.post(f"/projects/{project_id}/documents", json={"name": "notes.docx", "size_bytes": 10}).status_code == 422
     assert (
-        api.client.post(f"/projects/{project_id}/documents", json={"name": "big.pdf", "size_bytes": 26 * 1024 * 1024}).status_code
+        api.client.post(f"/projects/{project_id}/documents", json={"name": "big.pdf", "size_bytes": 31 * 1024 * 1024}).status_code
         == 422
     )
 

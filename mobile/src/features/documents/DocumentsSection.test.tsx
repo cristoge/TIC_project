@@ -160,7 +160,7 @@ describe("DocumentsSection", () => {
         { ...picked, name: "apuntes.docx" },
         "Solo se pueden subir archivos PDF.",
       ],
-      ["a PDF over 25 MB", { ...picked, size: 25 * MB + 1 }, "El PDF supera el límite de 25 MB."],
+      ["a PDF over 30 MB", { ...picked, size: 30 * MB + 1 }, "El PDF supera el límite de 30 MB."],
     ])("refuses %s without any request", async (_, file, message) => {
       mockApi.get.mockResolvedValue([tema1]);
       mockGetDocumentAsync.mockResolvedValue({ canceled: false, assets: [file] });
