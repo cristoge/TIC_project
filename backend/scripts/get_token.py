@@ -27,20 +27,28 @@ def get_id_token(client, client_id: str, email: str, password: str) -> str:
     return response["AuthenticationResult"]["IdToken"]
 
 
+def region_from_issuer(issuer: str) -> str | None:
+    """https://cognito-idp.<region>.amazonaws.com/<pool> -> <region>."""
+    host = issuer.removeprefix("https://").split("/", 1)[0]
+    parts = host.split(".")
+    return parts[1] if len(parts) > 2 and parts[0] == "cognito-idp" else None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("email")
-    parser.add_argument("--region", default=os.environ.get("AWS_REGION", "eu-central-1"))
+    parser.add_argument("--region", default=None, help="defaults to the region in COGNITO_ISSUER, else eu-south-2")
     args = parser.parse_args()
 
     client_id = os.environ.get("COGNITO_CLIENT_ID")
     if not client_id:
         print("Set COGNITO_CLIENT_ID (terraform -chdir=infra/auth output -raw app_client_id).", file=sys.stderr)
         return 2
+    region = args.region or region_from_issuer(os.environ.get("COGNITO_ISSUER", "")) or "eu-south-2"
     password = os.environ.get("COGNITO_PASSWORD") or getpass.getpass("Password: ")
 
     try:
-        token = get_id_token(boto3.client("cognito-idp", region_name=args.region), client_id, args.email, password)
+        token = get_id_token(boto3.client("cognito-idp", region_name=region), client_id, args.email, password)
     except (ClientError, BotoCoreError, RuntimeError) as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1

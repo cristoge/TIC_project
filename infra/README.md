@@ -7,7 +7,7 @@ Two independent Terraform configurations, each with its own state:
 | `auth/` | Cognito user pool and app client | Always deployed (free at this size); needed to run the backend locally with real tokens |
 | `app/` | VPC, RDS, S3, SQS, Lambdas, API Gateway, AgentCore Runtime | Only for the demo, then `terraform destroy` (not written yet) |
 
-Region `eu-central-1`. Terraform 1.17 (`mise exec terraform@1.17.0 -- terraform ...`), AWS provider `~> 6.0` (locked in `.terraform.lock.hcl`). State is local (`terraform.tfstate`, git-ignored): enough for a single-person portfolio; a shared setup would use an S3 backend.
+Region `eu-south-2` (Madrid) for Cognito. The parked `app/` stack will pick its own region when the AWS migration resumes (the Bedrock reranker is not offered in `eu-south-2`). Terraform 1.17 (`mise exec terraform@1.17.0 -- terraform ...`), AWS provider `~> 6.0` (locked in `.terraform.lock.hcl`). State is local (`terraform.tfstate`, git-ignored): enough for a single-person portfolio; a shared setup would use an S3 backend.
 
 ## Auth: Cognito with a single user
 
@@ -21,10 +21,10 @@ terraform -chdir=infra/auth apply    # creates the user pool and the app client
 
 POOL=$(terraform -chdir=infra/auth output -raw user_pool_id)
 EMAIL=you@example.com
-aws cognito-idp admin-create-user --region eu-central-1 --user-pool-id "$POOL" --username "$EMAIL" \
+aws cognito-idp admin-create-user --region eu-south-2 --user-pool-id "$POOL" --username "$EMAIL" \
   --user-attributes Name=email,Value="$EMAIL" Name=email_verified,Value=true --message-action SUPPRESS
 read -rs -p "Password (12+ chars, upper, lower, number): " PW; echo   # keeps it out of shell history
-aws cognito-idp admin-set-user-password --region eu-central-1 --user-pool-id "$POOL" --username "$EMAIL" \
+aws cognito-idp admin-set-user-password --region eu-south-2 --user-pool-id "$POOL" --username "$EMAIL" \
   --password "$PW" --permanent
 unset PW
 ```

@@ -2,7 +2,13 @@ import boto3
 import pytest
 from botocore.stub import Stubber
 
-from scripts.get_token import get_id_token
+from scripts.get_token import get_id_token, region_from_issuer
+
+
+def test_region_comes_from_the_issuer():
+    assert region_from_issuer("https://cognito-idp.eu-south-2.amazonaws.com/eu-south-2_AbC") == "eu-south-2"
+    assert region_from_issuer("") is None
+    assert region_from_issuer("https://example.com/pool") is None
 
 
 def _client():
