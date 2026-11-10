@@ -680,7 +680,7 @@ docs/
 
 ## Infraestructura como código
 
-> **Decisión pendiente: CDK o Terraform.** La recomendación técnica es CDK; el autor se inclina por Terraform porque es más demandado en el mercado laboral.
+> **Decidido: Terraform** (2026-11-10), por su peso en el mercado laboral. El proveedor `hashicorp/aws` 6.72 incluye `aws_bedrockagentcore_agent_runtime` (autorizador JWT con `allowed_audience`, modo VPC, `request_header_allowlist` y despliegue del código como zip desde S3, sin imagen Docker). Detalles en `infra/README.md`.
 
 | | CDK | Terraform |
 |---|---|---|
@@ -792,7 +792,7 @@ Precios comprobados con la API de precios de AWS (`eu-west-1`, salvo que se indi
 
 ### Decisiones
 
-- [ ] **CDK o Terraform**.
+- [x] **CDK o Terraform**: Terraform.
 - [ ] Modelo evaluador para la fidelidad de las respuestas.
 - [ ] Login en la app: pantallas propias con `fetch` a Cognito o *managed login* con PKCE.
 
@@ -807,7 +807,7 @@ Precios comprobados con la API de precios de AWS (`eu-west-1`, salvo que se indi
 - [ ] Cómo se envía `topK` a Nova 2 Lite.
 - [ ] Hook de Strands para limitar las llamadas a tools por turno.
 - [ ] Endpoints exactos que necesita AgentCore Runtime dentro de la VPC (ECR, Logs…).
-- [ ] Soporte de AgentCore en Terraform (si se elige Terraform).
+- [x] Soporte de AgentCore en Terraform: `aws_bedrockagentcore_agent_runtime` en el proveedor 6.72.
 
 ---
 

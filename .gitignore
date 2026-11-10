@@ -77,3 +77,11 @@ Thumbs.db
 # Tooling caches
 # =========================
 .pytest_cache/
+
+# =========================
+# Terraform
+# =========================
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
