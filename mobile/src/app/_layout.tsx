@@ -53,10 +53,11 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <StatusBar style={theme.scheme === "dark" ? "light" : "dark"} />
       <Stack screenOptions={screenOptions}>
-        <Stack.Protected guard={signedIn}>
+        {/* Each guard names its fallback: without it a signed-out "/" has no route to match. */}
+        <Stack.Protected guard={signedIn} redirectTo="/login">
           <Stack.Screen name="(app)" options={{ headerShown: false }} />
         </Stack.Protected>
-        <Stack.Protected guard={!signedIn}>
+        <Stack.Protected guard={!signedIn} redirectTo="/">
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         </Stack.Protected>
       </Stack>
