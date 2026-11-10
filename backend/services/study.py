@@ -14,7 +14,15 @@ from typing import Protocol, TypeVar
 from pydantic import BaseModel
 
 from domain.documents import Page
-from domain.study import Flashcard, FlashcardSet, GradedAnswer, Quiz, QuizAttemptResult, QuizQuestion, Summary
+from domain.study import (
+    Flashcard,
+    FlashcardSet,
+    GradedAnswer,
+    Quiz,
+    QuizAttemptResult,
+    QuizQuestion,
+    Summary,
+)
 from services.search import SearchService
 
 logger = logging.getLogger(__name__)
@@ -83,7 +91,12 @@ class StudyRepository(Protocol):
     def get_document(self, document_id: str) -> DocumentInfo: ...
 
     def create_generation(
-        self, kind: str, document_id: str, model: str, topic: str | None = None, requested_count: int | None = None
+        self,
+        kind: str,
+        document_id: str,
+        model: str,
+        topic: str | None = None,
+        requested_count: int | None = None,
     ) -> str: ...
 
     def get_request(self, kind: str, generation_id: str) -> GenerationRequest: ...
@@ -102,7 +115,9 @@ class StudyRepository(Protocol):
         """Questions of a ready quiz, in order; empty if the quiz is not ready."""
         ...
 
-    def save_attempt(self, quiz_id: str, score: int, total: int, answers: list[GradedAnswer]) -> str: ...
+    def save_attempt(
+        self, quiz_id: str, score: int, total: int, answers: list[GradedAnswer]
+    ) -> str: ...
 
 
 class PagesSource(Protocol):
@@ -110,7 +125,9 @@ class PagesSource(Protocol):
 
 
 class StructuredLLM(Protocol):
-    def generate(self, instructions: str, content: str, output_type: type[T], temperature: float) -> T: ...
+    def generate(
+        self, instructions: str, content: str, output_type: type[T], temperature: float
+    ) -> T: ...
 
 
 @dataclass
@@ -128,10 +145,14 @@ class StudyService:
         self._require_ready(document_id)
         return self.repository.create_generation("summary", document_id, self.model_id)
 
-    def create_flashcards(self, document_id: str, count: int = 10, topic: str | None = None) -> str:
+    def create_flashcards(
+        self, document_id: str, count: int = 10, topic: str | None = None
+    ) -> str:
         return self._create_set("flashcards", document_id, count, topic)
 
-    def create_quiz(self, document_id: str, count: int = 10, topic: str | None = None) -> str:
+    def create_quiz(
+        self, document_id: str, count: int = 10, topic: str | None = None
+    ) -> str:
         return self._create_set("quiz", document_id, count, topic)
 
     # --- generate (fill the rows) ------------------------------------------------
@@ -142,7 +163,9 @@ class StudyService:
             text = _tagged(self.pages.load_pages(request.document_id))
             if len(text) > MAX_SUMMARY_CHARS:
                 raise FinalGenerationError("The document is too long to summarize.")
-            summary = self.llm.generate(SUMMARY_INSTRUCTIONS, text, Summary, SUMMARY_TEMPERATURE)
+            summary = self.llm.generate(
+                SUMMARY_INSTRUCTIONS, text, Summary, SUMMARY_TEMPERATURE
+            )
             self.repository.complete_summary(summary_id, summary.model_dump())
 
     def generate_flashcards(self, deck_id: str) -> None:
@@ -152,10 +175,16 @@ class StudyService:
             previous = self.repository.previous_questions(request.document_id)
             content = self._source_text(request, document)
             if previous:
-                content += "\n\nQuestions already used:\n" + "\n".join(f"- {q}" for q in previous)
+                content += "\n\nQuestions already used:\n" + "\n".join(
+                    f"- {q}" for q in previous
+                )
             instructions = FLASHCARD_INSTRUCTIONS.format(count=request.requested_count)
-            generated = self.llm.generate(instructions, content, FlashcardSet, FLASHCARDS_TEMPERATURE)
-            cards = _valid_cards(generated.cards, previous, document.page_count, request.requested_count)
+            generated = self.llm.generate(
+                instructions, content, FlashcardSet, FLASHCARDS_TEMPERATURE
+            )
+            cards = _valid_cards(
+                generated.cards, previous, document.page_count, request.requested_count
+            )
             if not cards:
                 raise FinalGenerationError("No valid flashcards could be generated.")
             self.repository.complete_deck(deck_id, cards)
@@ -167,9 +196,13 @@ class StudyService:
             content = self._source_text(request, document)
             instructions = QUIZ_INSTRUCTIONS.format(count=request.requested_count)
             generated = self.llm.generate(instructions, content, Quiz, QUIZ_TEMPERATURE)
-            questions = self._valid_questions(generated.questions, document.page_count, request.requested_count)
+            questions = self._valid_questions(
+                generated.questions, document.page_count, request.requested_count
+            )
             if not questions:
-                raise FinalGenerationError("No valid quiz questions could be generated.")
+                raise FinalGenerationError(
+                    "No valid quiz questions could be generated."
+                )
             self.repository.complete_quiz(quiz_id, questions)
 
     # --- grading -------------------------------------------------------------------
@@ -196,16 +229,22 @@ class StudyService:
         ]
         score = sum(answer.is_correct for answer in graded)
         attempt_id = self.repository.save_attempt(quiz_id, score, len(graded), graded)
-        return QuizAttemptResult(attempt_id=attempt_id, score=score, total=len(graded), answers=graded)
+        return QuizAttemptResult(
+            attempt_id=attempt_id, score=score, total=len(graded), answers=graded
+        )
 
     # --- helpers -------------------------------------------------------------------
 
-    def _create_set(self, kind: str, document_id: str, count: int, topic: str | None) -> str:
+    def _create_set(
+        self, kind: str, document_id: str, count: int, topic: str | None
+    ) -> str:
         if not 1 <= count <= MAX_ITEMS:
             raise ValueError(f"The number of items must be between 1 and {MAX_ITEMS}.")
         self._require_ready(document_id)
         topic = topic.strip() if topic and topic.strip() else None
-        return self.repository.create_generation(kind, document_id, self.model_id, topic=topic, requested_count=count)
+        return self.repository.create_generation(
+            kind, document_id, self.model_id, topic=topic, requested_count=count
+        )
 
     def _require_ready(self, document_id: str) -> None:
         if self.repository.get_document(document_id).status != "ready":
@@ -213,13 +252,21 @@ class StudyService:
 
     def _source_text(self, request: GenerationRequest, document: DocumentInfo) -> str:
         if request.topic:
-            results = self.search.search(document.project_id, request.topic, document_ids=[request.document_id])
+            results = self.search.search(
+                document.project_id, request.topic, document_ids=[request.document_id]
+            )
             if not results:
-                raise FinalGenerationError(f"Nothing about '{request.topic}' was found in the document.")
+                raise FinalGenerationError(
+                    f"Nothing about '{request.topic}' was found in the document."
+                )
             return "\n\n".join(f"[Page {r.page_number}]\n{r.content}" for r in results)
-        return _tagged(_spread_sample(self.pages.load_pages(request.document_id), SAMPLE_CHARS))
+        return _tagged(
+            _spread_sample(self.pages.load_pages(request.document_id), SAMPLE_CHARS)
+        )
 
-    def _valid_questions(self, questions: list[QuizQuestion], page_count: int, limit: int) -> list[QuizQuestion]:
+    def _valid_questions(
+        self, questions: list[QuizQuestion], page_count: int, limit: int
+    ) -> list[QuizQuestion]:
         valid, seen = [], set()
         for question in questions:
             text = question.question.strip()
@@ -260,12 +307,18 @@ class StudyService:
             self.repository.fail_generation(kind, generation_id, str(error))
         except Exception:
             logger.exception("Generating %s %s failed", kind, generation_id)
-            self.repository.fail_generation(kind, generation_id, UNEXPECTED_ERROR_MESSAGE)
+            self.repository.fail_generation(
+                kind, generation_id, UNEXPECTED_ERROR_MESSAGE
+            )
             raise
 
 
 def _tagged(pages: list[Page]) -> str:
-    return "\n\n".join(f"[Page {page.number}]\n{page.text.strip()}" for page in pages if page.text.strip())
+    return "\n\n".join(
+        f"[Page {page.number}]\n{page.text.strip()}"
+        for page in pages
+        if page.text.strip()
+    )
 
 
 def _spread_sample(pages: list[Page], budget: int) -> list[Page]:
@@ -281,7 +334,9 @@ def _spread_sample(pages: list[Page], budget: int) -> list[Page]:
     return [pages[round(i * step)] for i in range(keep)]
 
 
-def _valid_cards(cards: list[Flashcard], previous: list[str], page_count: int, limit: int) -> list[Flashcard]:
+def _valid_cards(
+    cards: list[Flashcard], previous: list[str], page_count: int, limit: int
+) -> list[Flashcard]:
     valid, seen = [], {_normalized(q) for q in previous}
     for card in cards:
         question, answer = card.question.strip(), card.answer.strip()
@@ -294,7 +349,11 @@ def _valid_cards(cards: list[Flashcard], previous: list[str], page_count: int, l
         ):
             continue
         seen.add(_normalized(question))
-        valid.append(Flashcard(question=question, answer=answer, page=_clamp(card.page, page_count)))
+        valid.append(
+            Flashcard(
+                question=question, answer=answer, page=_clamp(card.page, page_count)
+            )
+        )
         if len(valid) == limit:
             break
     return valid
