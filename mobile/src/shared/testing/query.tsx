@@ -14,6 +14,8 @@ export function createTestQueryClient(): QueryClient {
     ...defaults,
     // gcTime Infinity schedules no garbage-collection timers that outlive the test.
     queries: { ...defaults.queries, retry: false, gcTime: Infinity },
+    // A finished mutation's timer is real and would keep Jest from exiting for five minutes.
+    mutations: { ...defaults.mutations, gcTime: Infinity },
   });
   return queryClient;
 }

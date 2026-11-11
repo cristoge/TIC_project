@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { ChatsSection } from "@/features/chat";
 import { DocumentsSection } from "@/features/documents";
 import { AppText, Screen, SegmentedControl } from "@/shared/ui";
 
@@ -23,7 +24,7 @@ export function ProjectScreen({ projectId }: Props) {
       {section === "documents" ? (
         <DocumentsSection projectId={projectId} />
       ) : section === "chats" ? (
-        <AppText color="textMuted">Los chats llegarán pronto.</AppText>
+        <ChatsSection projectId={projectId} />
       ) : (
         <AppText color="textMuted">Las flashcards llegarán pronto.</AppText>
       )}

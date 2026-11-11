@@ -8,6 +8,7 @@ const mockApi = createFakeApi();
 
 jest.mock("@/core/api", () => ({ getApi: () => mockApi }));
 jest.mock("expo-document-picker", () => ({ getDocumentAsync: jest.fn() }));
+jest.mock("expo-router", () => ({ useRouter: () => ({ push: jest.fn() }) }));
 
 beforeEach(() => {
   mockApi.get.mockReset();
@@ -34,13 +35,14 @@ describe("ProjectScreen", () => {
     await screen.findByText("Aún no hay documentos");
 
     await user.press(screen.getByRole("tab", { name: "Chats" }));
-    expect(screen.getByText("Los chats llegarán pronto.")).toBeOnTheScreen();
+    expect(await screen.findByText("Aún no hay chats")).toBeOnTheScreen();
+    expect(mockApi.get).toHaveBeenCalledWith("/projects/p1/conversations");
     expect(screen.getByRole("tab", { name: "Chats" })).toBeSelected();
     expect(screen.queryByText("Aún no hay documentos")).not.toBeOnTheScreen();
 
     await user.press(screen.getByRole("tab", { name: "Flashcards" }));
     expect(screen.getByText("Las flashcards llegarán pronto.")).toBeOnTheScreen();
-    expect(screen.queryByText("Los chats llegarán pronto.")).not.toBeOnTheScreen();
+    expect(screen.queryByText("Aún no hay chats")).not.toBeOnTheScreen();
 
     await user.press(screen.getByRole("tab", { name: "Documentos" }));
     expect(await screen.findByText("Aún no hay documentos")).toBeOnTheScreen();
