@@ -38,14 +38,24 @@ class CitationRenderer extends Renderer {
   }
 
   text(text: string | ReactNode[], styles?: TextStyle): ReactNode {
-    if (typeof text !== "string") return super.text(text, styles);
+    return super.text(this.cited(text), styles);
+  }
+
+  // The parser hands bold and italic their text directly, without going through `text`.
+  strong(children: string | ReactNode[], styles?: TextStyle): ReactNode {
+    return super.strong(this.cited(children), styles);
+  }
+
+  em(children: string | ReactNode[], styles?: TextStyle): ReactNode {
+    return super.em(this.cited(children), styles);
+  }
+
+  private cited(text: string | ReactNode[]): string | ReactNode[] {
+    if (typeof text !== "string") return text;
     // Splitting on a capture group leaves the cited numbers at the odd positions.
     const parts = text.split(CITATION);
-    if (parts.length === 1) return super.text(text, styles);
-    return super.text(
-      parts.map((part, index) => (index % 2 === 0 ? part : this.citation(part))),
-      styles,
-    );
+    if (parts.length === 1) return text;
+    return parts.map((part, index) => (index % 2 === 0 ? part : this.citation(part)));
   }
 
   private citation(number: string): ReactNode {

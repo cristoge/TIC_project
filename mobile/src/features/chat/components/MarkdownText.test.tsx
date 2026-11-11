@@ -34,6 +34,12 @@ describe("MarkdownText", () => {
     expect(onCitation).toHaveBeenCalledWith(tema1);
   });
 
+  it("finds a citation inside bold and italic text", async () => {
+    await render(<MarkdownText value={"**Nodo [1]** y *arista [1]*"} sources={[tema1]} />);
+
+    expect(screen.getAllByRole("button", { name: "Cita 1: Tema 1.pdf, página 3" })).toHaveLength(2);
+  });
+
   it("leaves a number without a source as plain text", async () => {
     await render(<MarkdownText value="Ver la tabla [7]." sources={[tema1]} />);
 
