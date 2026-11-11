@@ -7,6 +7,7 @@ import {
   type ViewStyle,
 } from "react-native";
 
+import { useThemePreference } from "./themePreference";
 import { colors, radii, spacing, typography, type ColorScheme, type Colors } from "./tokens";
 
 export type Theme = {
@@ -24,7 +25,10 @@ const themes: Record<ColorScheme, Theme> = {
 };
 
 export function useTheme(): Theme {
-  return themes[useColorScheme() === "dark" ? "dark" : "light"];
+  const system = useColorScheme();
+  const preference = useThemePreference((state) => state.preference);
+  if (preference !== "system") return themes[preference];
+  return themes[system === "dark" ? "dark" : "light"];
 }
 
 /** Styles that depend on the theme. Declare `factory` at module level so it stays stable. */

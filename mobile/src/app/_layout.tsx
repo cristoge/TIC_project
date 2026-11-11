@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { useStackScreenOptions } from "@/core/navigation";
 import { useSession } from "@/features/auth";
 import { createQueryClient } from "@/shared/api";
-import { useTheme } from "@/shared/theme";
+import { useTheme, useThemePreference } from "@/shared/theme";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,11 +31,17 @@ export default function RootLayout() {
   });
   // A font that fails to load falls back to the system font instead of blocking the app.
   const fontsReady = loaded || error !== null;
-  const ready = fontsReady && status !== "restoring";
+  // Waiting for the saved theme keeps the first screen from flashing in the other scheme.
+  const [themeRestored, setThemeRestored] = useState(false);
+  const ready = fontsReady && status !== "restoring" && themeRestored;
   const signedIn = status === "signedIn";
 
   useEffect(() => {
     useSession.getState().restore();
+    useThemePreference
+      .getState()
+      .restore()
+      .finally(() => setThemeRestored(true));
   }, []);
 
   useEffect(() => {
