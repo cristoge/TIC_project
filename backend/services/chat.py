@@ -42,6 +42,10 @@ class ConversationRepository(Protocol):
         """The conversation's project if the user owns it, else None."""
         ...
 
+    def student_name(self, user_id: str) -> str | None:
+        """The name the student set in the app, or None."""
+        ...
+
     def recent_messages(self, conversation_id: str, max_chars: int) -> list[HistoryMessage]:
         """Newest messages that fit in max_chars, oldest first, starting with a user message."""
         ...
@@ -75,7 +79,13 @@ class ChatService:
 
         history = self.conversations.recent_messages(conversation_id, self.history_chars)
         recorder = TurnRecorder()
-        state = {"user_id": user_id, "project_id": project_id, "conversation_id": conversation_id, "recorder": recorder}
+        state = {
+            "user_id": user_id,
+            "project_id": project_id,
+            "conversation_id": conversation_id,
+            "recorder": recorder,
+            "student_name": self.conversations.student_name(user_id),
+        }
 
         chunks = []
         async for chunk in self.runner.stream(history, message, state):

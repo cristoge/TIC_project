@@ -21,6 +21,13 @@ class PostgresConversationRepository:
             ).fetchone()
         return str(row[0]) if row else None
 
+    def student_name(self, user_id: str) -> str | None:
+        with psycopg.connect(self.conninfo) as conn:
+            row = conn.execute("select name from users where id = %s", (user_id,)).fetchone()
+        if row is None:
+            return None
+        return (row[0] or "").strip() or None
+
     def recent_messages(self, conversation_id: str, max_chars: int) -> list[HistoryMessage]:
         with psycopg.connect(self.conninfo) as conn:
             # Newest first. message_role is an enum ordered as declared (user, assistant),

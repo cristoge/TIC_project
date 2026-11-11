@@ -1,5 +1,6 @@
 """The chat agent with Strands: the model (Nova 2 Lite on Bedrock, or DeepSeek locally) plus the project tools."""
 
+import json
 from collections.abc import AsyncIterator
 
 from strands import Agent, ToolContext, tool
@@ -25,6 +26,16 @@ Rules:
 - Format with limited Markdown only: **bold** for key terms and short bullet lists. No headings, tables, code blocks or links."""
 
 
+def system_prompt(student_name: str | None) -> str:
+    """The rules, plus the student's name when they set one in the app (quoted, since they typed it)."""
+    if not student_name:
+        return SYSTEM_PROMPT
+    return (
+        f"{SYSTEM_PROMPT}\n- The student's name is {json.dumps(student_name, ensure_ascii=False)}. You may use it "
+        "to address them or when they ask about themselves; it is the one thing you may say that is not in the passages."
+    )
+
+
 class StrandsAgentRunner:
     def __init__(
         self,
@@ -42,7 +53,7 @@ class StrandsAgentRunner:
     async def stream(self, history: list[HistoryMessage], message: str, invocation_state: dict) -> AsyncIterator[str]:
         agent = Agent(
             model=self.model_factory(self.temperature),
-            system_prompt=SYSTEM_PROMPT,
+            system_prompt=system_prompt(invocation_state.get("student_name")),
             tools=strands_tools(self.tools),
             messages=[{"role": m.role, "content": [{"text": m.content}]} for m in history],
             callback_handler=None,

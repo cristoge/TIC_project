@@ -7,14 +7,18 @@ from services.chat import ChatService, ConversationNotFound, HistoryMessage, Inv
 
 
 class FakeConversations:
-    def __init__(self, project_id="p1", history=()):
+    def __init__(self, project_id="p1", history=(), name="Ana"):
         self.project_id = project_id
+        self.name = name
         self.history = list(history)
         self.saved = None
         self.history_budget = None
 
     def project_of(self, user_id, conversation_id):
         return self.project_id if user_id == "u1" else None
+
+    def student_name(self, user_id):
+        return self.name if user_id == "u1" else None
 
     def recent_messages(self, conversation_id, max_chars):
         self.history_budget = max_chars
@@ -140,3 +144,13 @@ def test_a_blank_answer_still_announces_created_artifacts_but_saves_nothing():
         {"type": "error", "code": "no_answer", "message": "No answer could be produced. Please try again."},
     ]
     assert conversations.saved is None
+
+
+@pytest.mark.parametrize("name", ["Ana", None])
+def test_the_agent_is_told_the_students_name_when_there_is_one(name):
+    runner = FakeRunner(["Hola"])
+    service = ChatService(FakeConversations(name=name), runner)
+
+    _collect(service, user_id="u1", conversation_id="c-1", message="¿Cómo me llamo?")
+
+    assert runner.calls[0][2]["student_name"] == name

@@ -6,7 +6,7 @@ import json
 import pytest
 from strands.models import Model
 
-from adapters.bedrock.agent_runner import StrandsAgentRunner, strands_tools
+from adapters.bedrock.agent_runner import SYSTEM_PROMPT, StrandsAgentRunner, strands_tools
 from domain.search import SearchResult
 from services.agent_tools import AgentTools, TurnRecorder
 from services.chat import HistoryMessage
@@ -42,6 +42,7 @@ class ScriptedModel(Model):
         self.repeat_last = repeat_last
         self.calls = 0
         self.seen_messages = []
+        self.seen_system_prompts = []
 
     def update_config(self, **kwargs):
         pass
@@ -55,6 +56,7 @@ class ScriptedModel(Model):
     async def stream(self, messages, tool_specs=None, system_prompt=None, **kwargs):
         self.calls += 1
         self.seen_messages.append(json.loads(json.dumps(messages, default=str)))
+        self.seen_system_prompts.append(system_prompt)
         step = self.steps[0] if (self.repeat_last and len(self.steps) == 1) else self.steps.pop(0)
         yield {"messageStart": {"role": "assistant"}}
         if step[0] == "tool":
@@ -69,11 +71,13 @@ class ScriptedModel(Model):
         yield {"metadata": {"usage": {"inputTokens": 1, "outputTokens": 1, "totalTokens": 2}, "metrics": {"latencyMs": 1}}}
 
 
-def _run(monkeypatch, model, history=()):
+def _run(monkeypatch, model, history=(), student_name=None):
     search = Search()
     tools = AgentTools(Docs(), search, Unused(), Unused())
     recorder = TurnRecorder()
     state = {"user_id": "u1", "project_id": PROJECT, "conversation_id": "cv", "recorder": recorder}
+    if student_name is not None:
+        state["student_name"] = student_name
 
     async def collect():
         return [c async for c in StrandsAgentRunner(tools, model_factory=lambda temperature: model).stream(list(history), "pregunta", state)]
@@ -127,3 +131,18 @@ def test_history_is_passed_as_prior_messages(monkeypatch):
     _run(monkeypatch, model, [HistoryMessage("user", "Q1"), HistoryMessage("assistant", "A1")])
     roles = [(m["role"], m["content"][0].get("text")) for m in model.seen_messages[0]]
     assert roles == [("user", "Q1"), ("assistant", "A1"), ("user", "pregunta")]
+
+
+def test_the_students_name_is_in_the_system_prompt_and_may_be_used(monkeypatch):
+    model = ScriptedModel([("text", "Te llamas Ana.")])
+    _run(monkeypatch, model, student_name='Ana "la" Pérez')
+    prompt = model.seen_system_prompts[0]
+    assert prompt.startswith(SYSTEM_PROMPT)
+    assert 'The student\'s name is "Ana \\"la\\" Pérez".' in prompt
+    assert "may use it" in prompt
+
+
+def test_without_a_name_the_system_prompt_says_nothing_about_it(monkeypatch):
+    model = ScriptedModel([("text", "ok")])
+    _run(monkeypatch, model)
+    assert model.seen_system_prompts[0] == SYSTEM_PROMPT

@@ -133,3 +133,15 @@ def test_list_documents_of_project_and_generation_status(conn, database):
         "failed",
         "No valid flashcards could be generated.",
     )
+
+
+def test_student_name_comes_from_the_users_row(conn, database):
+    user_id, *_ = _setup(conn)
+    repository = PostgresConversationRepository(database)
+
+    assert repository.student_name(user_id) is None
+    conn.execute("update users set name = '  ' where id = %s", (user_id,))
+    assert repository.student_name(user_id) is None
+    conn.execute("update users set name = ' Ana ' where id = %s", (user_id,))
+    assert repository.student_name(user_id) == "Ana"
+    assert repository.student_name("00000000-0000-0000-0000-000000000000") is None
