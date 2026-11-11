@@ -53,3 +53,25 @@ describe("session-guarded routes", () => {
     expect(screen).toHavePathname("/");
   });
 });
+
+describe("settings", () => {
+  it("is a signed-in route", async () => {
+    items.set("auth.idToken", "id-1");
+    items.set("auth.refreshToken", "refresh-1");
+    mockApi.get.mockImplementation(async (path: string) =>
+      path === "/me" ? { id: "u1", email: "ana@example.com", name: "Ana" } : [],
+    );
+
+    await renderRouter(appDirectory, { initialUrl: "/settings" });
+
+    expect(await screen.findByText("ana@example.com")).toBeOnTheScreen();
+    expect(screen).toHavePathname("/settings");
+  });
+
+  it("is out of reach once signed out", async () => {
+    await renderRouter(appDirectory, { initialUrl: "/settings" });
+
+    expect(await screen.findByLabelText("Email")).toBeOnTheScreen();
+    expect(screen).toHavePathname("/login");
+  });
+});

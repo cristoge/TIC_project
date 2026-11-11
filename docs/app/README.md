@@ -37,7 +37,7 @@ Login
       └─ Estudio     [ Flashcards | Tests ] de todos los documentos + crear
                      ├─ Flashcards → dar la vuelta a cada tarjeta
                      └─ Test → una pregunta cada vez → nota y explicaciones
-Ajustes: nombre (perfil), tema claro/oscuro, cerrar sesión
+Ajustes: nombre (perfil), tema sistema/claro/oscuro (se guarda en el móvil), cerrar sesión
 ```
 
 - **Todo cuelga del proyecto**: el backend no tiene chats sin proyecto ni listas globales.
