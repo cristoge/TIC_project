@@ -23,6 +23,10 @@ const readablePairs: [ColorName, ColorName][] = [
   ["danger", "background"],
 ];
 
+it("uses the near-black #111112 as the dark background", () => {
+  expect(colors.dark.background).toBe("#111112");
+});
+
 describe.each(["light", "dark"] as const)("%s colors", (scheme) => {
   it.each(readablePairs)("%s on %s meets WCAG AA (4.5:1)", (foreground, background) => {
     expect(contrast(colors[scheme][foreground], colors[scheme][background])).toBeGreaterThanOrEqual(

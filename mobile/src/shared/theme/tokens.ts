@@ -16,15 +16,16 @@ export const colors = {
     danger: "#B42318",
   },
   dark: {
-    background: "#0E1116",
-    surface: "#171B22",
+    // Neutral near-blacks with no blue tint; the surface sits one step lighter.
+    background: "#111112",
+    surface: "#1A1A1C",
     text: "#F3F4F6",
-    textMuted: "#A1A8B3",
-    border: "#2A303A",
+    textMuted: "#A1A1A8",
+    border: "#2C2C30",
     // A lighter cobalt so it reads as text on the dark background. No blue does that and also
     // carries white text at AA, so text on it is dark here.
     accent: "#6E97F2",
-    onAccent: "#0E1116",
+    onAccent: "#111112",
     accentSoft: "#1B2840",
     danger: "#F97066",
   },

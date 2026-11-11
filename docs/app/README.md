@@ -54,12 +54,12 @@ Sobria y profesional (rediseño del 2026-11-11, `odd/tasks/mobile-redesign.md`):
 | Token | Claro | Oscuro | Uso |
 |---|---|---|---|
 | `accent` | `#0047AB` | `#6E97F2` | Acción principal de cada pantalla, enlaces y selección actual |
-| `onAccent` | `#FFFFFF` | `#0E1116` | Texto sobre el acento |
+| `onAccent` | `#FFFFFF` | `#111112` | Texto sobre el acento |
 | `accentSoft` | `#E6EEF9` | `#1B2840` | Insignias y entrada seleccionada del menú |
-| `background` | `#FFFFFF` | `#0E1116` | Fondo de pantalla, tarjetas y campos |
-| `surface` | `#F6F7F9` | `#171B22` | Menú lateral, burbujas propias, fondo de los selectores |
-| `border` | `#E5E7EB` | `#2A303A` | Bordes y separadores |
-| `text` / `textMuted` | `#111827` / `#4B5563` | `#F3F4F6` / `#A1A8B3` | Texto principal y de apoyo |
+| `background` | `#FFFFFF` | `#111112` | Fondo de pantalla, tarjetas y campos |
+| `surface` | `#F6F7F9` | `#1A1A1C` | Menú lateral, burbujas propias, fondo de los selectores |
+| `border` | `#E5E7EB` | `#2C2C30` | Bordes y separadores |
+| `text` / `textMuted` | `#111827` / `#4B5563` | `#F3F4F6` / `#A1A1A8` | Texto principal y de apoyo |
 
 - **Contraste**: todos los pares de texto y fondo cumplen WCAG AA (4,5:1), comprobado en `tokens.test.ts`. En oscuro, ningún azul se lee como texto sobre el fondo y a la vez lleva texto blanco encima, así que el texto sobre el acento es oscuro.
 - **Tipografía**: **Geist**, con títulos de 24 px en seminegrita y texto de 16 px.
