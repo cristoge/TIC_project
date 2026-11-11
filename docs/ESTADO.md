@@ -1,15 +1,15 @@
 # Estado del proyecto y siguientes pasos
 
-Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-11-11 (tarde)**. Rama: `migration` (backend y app), subida a GitHub.
+Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-11-11 (noche)**. Rama: `migration` (backend y app), subida a GitHub.
 
-> **En una frase:** el backend funciona en local de principio a fin y la app Expo nueva ya tiene **login, proyectos y documentos** probados en el simulador contra ese backend, y el **chat**, todo probado en el simulador; el **estudio** y los **ajustes**. **La app está completa y probada en el simulador**, y acaba de pasar por un rediseño (azul cobalto, iconos y menú lateral como el de la app de Claude; `odd/tasks/mobile-redesign.md`) que falta probar en el simulador.
+> **En una frase:** **el proyecto cumple su objetivo en local.** El backend funciona de principio a fin y la app Expo (login, proyectos, documentos, chat con citas, estudio y ajustes) está completa, rediseñada y probada en el simulador contra ese backend. **El trabajo está en pausa por decisión del autor** (2026-11-11); lo que queda está en «Si se retoma».
 
 ## Lo que está hecho
 
 | Pieza | Estado | Dónde |
 |---|---|---|
 | Plan de diseño del backend | Cerrado | `docs/aws-migration/README.md` |
-| Backend hexagonal (dominio, servicios, adaptadores, puntos de entrada) | Hecho, 207 tests | `backend/` (ver `backend/README.md`) |
+| Backend hexagonal (dominio, servicios, adaptadores, puntos de entrada) | Hecho, 224 tests | `backend/` (ver `backend/README.md`) |
 | Esquema Postgres + pgvector + búsqueda híbrida (RRF) | Hecho | `backend/migrations/0001_initial_schema.sql` |
 | Ingesta de PDFs, búsqueda, resumen/flashcards/test, API REST, agente Strands | Hecho | `backend/services/`, `backend/entrypoints/` |
 | **Modo local** (`APP_ENV=local`) | **Funciona de principio a fin** | `backend/entrypoints/local.py` |
@@ -20,12 +20,13 @@ Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-
 | **App: login con Cognito** | **Probado en dispositivo**; la renovación del token tras un 401 ya se ha visto funcionar en real | `mobile/src/features/auth/` |
 | **App: proyectos** (lista, crear, renombrar, eliminar) | **Probado en el simulador** | `mobile/src/features/projects/` |
 | **App: documentos** (subir PDF ≤ 30 MB, estados, renombrar, eliminar) | **Probado en el simulador** con un PDF de 27 MB y 514 páginas | `mobile/src/features/documents/` |
-| **App: chat** (lista de chats, respuestas en streaming, citas `[n]`, tarjetas de resumen, flashcards y test) | **Probado en el simulador** (T6) | `mobile/src/features/chat/`, `mobile/src/features/study/` |
+| **App: chat** (lista de chats, renombrarlos y eliminarlos, respuestas en streaming, citas `[n]`, tarjetas de resumen, flashcards y test; el agente sabe el nombre del estudiante) | **Probado en el simulador** (T6) | `mobile/src/features/chat/`, `mobile/src/features/study/` |
 | **App: estudio** (flashcards y tests del proyecto, crearlos, renombrarlos, eliminarlos, modo estudio, hacer un test y ver la nota) | **Probado en el simulador** (T7 y T7b) | `mobile/src/features/study/` |
-| **App: ajustes** (nombre, tema sistema/claro/oscuro, cerrar sesión) | **Probado en el simulador** (T8) | `mobile/src/features/settings/`, `mobile/src/shared/theme/themePreference.ts` |
+| **App: ajustes** (nombre, tema sistema/claro/oscuro, color de acento entre 5, cerrar sesión) | **Probado en el simulador** (T8) | `mobile/src/features/settings/`, `mobile/src/shared/theme/themePreference.ts` |
+| **App: rediseño** (menú lateral, fondo `#111112`, acento `#66A3FF`, botones flotantes, menús de opciones en el centro, campo de chat flotante) | **Probado en el simulador** | `odd/tasks/mobile-redesign.md` |
 | Infraestructura AWS de la app (`infra/app`) | **Aparcada** | — |
 
-Seguimiento tarea a tarea, con las peticiones literales del autor: `odd/tasks/mobile-app.md` (app) y `odd/tasks/aws-migration.md` (backend). La app tiene 212 tests (`cd mobile && npx jest`).
+Seguimiento tarea a tarea, con las peticiones literales del autor: `odd/tasks/mobile-app.md` (app), `odd/tasks/mobile-redesign.md` (rediseño y retoques) y `odd/tasks/aws-migration.md` (backend). La app tiene 298 tests (`cd mobile && npx jest`) y el backend 224 (`cd backend && uv run pytest`).
 
 ### Datos que hacen falta para arrancar
 
@@ -61,14 +62,20 @@ La API y el agente tienen que escuchar en `0.0.0.0`, no solo en `127.0.0.1`, par
 - **Troceador propio** (ni LangChain ni semchunk, probados y descartados).
 - **Monorepo**: backend, app, infraestructura y documentación en el mismo repositorio.
 - **Ningún cambio en AWS sin permiso explícito** del autor (despliegues, recursos, llamadas de pago).
-- **App** (detalle en `docs/app/README.md`): solo login con `fetch` directo a Cognito; estética sobria con acento azul cobalto e iconos SF Symbols (Geist); `StyleSheet` + tokens; cada proyecto con menú lateral (Nuevo chat, Chats, Documentos, Estudio, Recientes, Ajustes) y la app abre en el último proyecto; resumen, flashcards y test como tarjetas en el chat; Markdown con `react-native-marked`.
+- **App** (detalle en `docs/app/README.md`): solo login con `fetch` directo a Cognito; estética sobria con acento `#66A3FF` (el estudiante puede elegir otro de 5 en Ajustes) e iconos SF Symbols (Geist); `StyleSheet` + tokens; cada proyecto con menú lateral (Nuevo chat, Chats, Documentos, Estudio, Recientes, Ajustes) y la app abre en el último proyecto; resumen, flashcards y test como tarjetas en el chat; Markdown con `react-native-marked`.
 - **Límite de PDF: 30 MB** y 20 documentos por proyecto.
-- **Un chat se crea con su primer mensaje** y toma como título sus primeros 60 caracteres (la API no permite renombrar chats); «Nuevo chat» no deja nada guardado si no se escribe.
+- **Un chat se crea con su primer mensaje** y toma como título sus primeros 60 caracteres; se puede renombrar después (`PATCH /conversations/{id}`) y entonces sube al principio de la lista. «Nuevo chat» no deja nada guardado si no se escribe.
+- **Menús de opciones** («⋯» o mantener pulsado) de chats, documentos, proyectos, flashcards y tests: alerta en el centro con «Renombrar», «Eliminar» y «Cancelar».
 - **Entrega**: commits por funcionalidad directamente en `migration`, sin PRs (proyecto personal; la cadena de ramas se fusionó y se borró el 2026-11-10).
 
-## Siguiente, en este orden
+## Si se retoma
 
-1. **Limpieza de tipado del backend** (aplazada): basedpyright marca 1 error y 119 avisos en `backend/entrypoints/api/app.py`, sin fallos de comportamiento (detalle en el historial de git de este documento, versión del 2026-11-10 por la mañana).
+Nada está a medias: todo está en `migration` y subido a GitHub. Por orden de interés:
+
+1. **Conjunto de evaluación** (ver «Más adelante»): es lo que da números para la memoria; necesita PDFs reales del autor.
+2. **Retomar AWS** (ver «Más adelante»).
+3. **Avisos abiertos de la app** (abajo).
+4. **Limpieza de tipado del backend**: basedpyright marca 1 error y 119 avisos en `backend/entrypoints/api/app.py`, sin fallos de comportamiento.
 
 ## Avisos abiertos de la app
 
@@ -76,6 +83,7 @@ La API y el agente tienen que escuchar en `0.0.0.0`, no solo en `127.0.0.1`, par
 - Mientras un PDF se procesa, la lista se refresca cada 3 s incluso con la app en segundo plano (falta conectar `focusManager` de TanStack Query con `AppState`).
 - Si se pierde la conexión y caduca el token, la renovación falla y la app cierra la sesión (lo pide la especificación, pero es estricto).
 - Renombrar un documento permite quitarle el `.pdf`; no rompe nada (el archivo se guarda por id) y el autor lo deja así de momento.
+- Con el teclado abierto, el campo de escribir del chat queda algo más alto de lo justo (mantiene el margen de la barra de inicio).
 
 ## Más adelante
 

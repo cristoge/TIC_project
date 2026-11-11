@@ -2,7 +2,7 @@
 
 Plan de la app Expo nueva (sustituye a `mobile/`) y contrato que debe cumplir con el backend. Todo lo de aquí está decidido con el autor (sesión del 2026-11-10); para cambiarlo, actualizar este documento primero.
 
-> **En una frase:** app de un solo usuario con login de Cognito, organizada por proyectos (chats, documentos y flashcards), con estética cálida de acento naranja, que habla con la API REST y con el agente por SSE. Pasar de local a AWS es **solo cambiar variables de entorno**.
+> **En una frase:** app de un solo usuario con login de Cognito, organizada por proyectos (chats, documentos y flashcards), con estética sobria de acento azul `#66A3FF` (elegible en Ajustes), que habla con la API REST y con el agente por SSE. Pasar de local a AWS es **solo cambiar variables de entorno**.
 
 ## Decisiones
 
