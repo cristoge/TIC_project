@@ -1,4 +1,4 @@
-import { useQuery, type Query } from "@tanstack/react-query";
+import { useMutation, useQuery, type Query } from "@tanstack/react-query";
 
 import { getApi } from "@/core/api";
 import type { Schemas } from "@/shared/api";
@@ -8,6 +8,9 @@ import { studyKeys } from "./queryKeys";
 export type Summary = Schemas["SummaryOut"];
 export type Deck = Schemas["DeckOut"];
 export type Quiz = Schemas["QuizOut"];
+export type Attempt = Schemas["AttemptOut"];
+/** The option index chosen for each question, by question id. */
+export type Answers = Record<string, number>;
 
 /** The API types a summary's content as a free object; this is the shape the backend writes. */
 export type SummaryContent = {
@@ -46,5 +49,12 @@ export function useQuiz(id: string) {
     queryKey: studyKeys.quiz(id),
     queryFn: () => getApi().get<Quiz>(`/quizzes/${id}`),
     refetchInterval: pollWhilePending,
+  });
+}
+
+export function useGradeQuiz(quizId: string) {
+  return useMutation({
+    mutationFn: (answers: Answers) =>
+      getApi().post<Attempt>(`/quizzes/${quizId}/attempts`, { answers }),
   });
 }
