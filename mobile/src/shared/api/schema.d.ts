@@ -159,10 +159,12 @@ export interface paths {
         get: operations["get_deck_flashcard_decks__deck_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Deck */
+        delete: operations["delete_deck_flashcard_decks__deck_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Rename Deck */
+        patch: operations["rename_deck_flashcard_decks__deck_id__patch"];
         trace?: never;
     };
     "/documents/{document_id}/quizzes": {
@@ -194,10 +196,12 @@ export interface paths {
         get: operations["get_quiz_quizzes__quiz_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Quiz */
+        delete: operations["delete_quiz_quizzes__quiz_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Rename Quiz */
+        patch: operations["rename_quiz_quizzes__quiz_id__patch"];
         trace?: never;
     };
     "/quizzes/{quiz_id}/attempts": {
@@ -587,6 +591,14 @@ export interface components {
             count: number;
             /** Topic */
             topic?: string | null;
+        };
+        /**
+         * SetUpdate
+         * @description A new topic for a deck or quiz; a blank or null one clears it.
+         */
+        SetUpdate: {
+            /** Topic */
+            topic: string | null;
         };
         /** SourceOut */
         SourceOut: {
@@ -1186,6 +1198,70 @@ export interface operations {
             };
         };
     };
+    delete_deck_flashcard_decks__deck_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deck_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_deck_flashcard_decks__deck_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                deck_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeckOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_quizzes_documents__document_id__quizzes_get: {
         parameters: {
             query?: never;
@@ -1262,6 +1338,70 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuizOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_quiz_quizzes__quiz_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quiz_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_quiz_quizzes__quiz_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                quiz_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetUpdate"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

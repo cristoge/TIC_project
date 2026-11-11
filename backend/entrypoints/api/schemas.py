@@ -96,6 +96,17 @@ class SetRequest(BaseModel):
     topic: str | None = Field(default=None, max_length=200)
 
 
+class SetUpdate(BaseModel):
+    """A new topic for a deck or quiz; a blank or null one clears it."""
+
+    topic: str | None = Field(max_length=200)
+
+    @field_validator("topic")
+    @classmethod
+    def blank_topic_is_none(cls, topic: str | None) -> str | None:
+        return (topic or "").strip() or None
+
+
 class SummaryOut(BaseModel):
     id: UUID
     document_id: UUID

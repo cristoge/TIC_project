@@ -287,6 +287,84 @@ def test_other_users_quizzes_are_not_found(api, conn):
     assert api.client.post(f"/quizzes/{quiz_id}/attempts", json={"answers": {}}).status_code == 404
 
 
+# --- renaming and deleting decks and quizzes ---------------------------------------
+
+STUDY_SETS = [("flashcard-decks", "flashcard_decks", "flashcard_deck_id"), ("quizzes", "quizzes", "quiz_id")]
+
+
+def _study_set(api, conn, path, table, status="ready", topic=None):
+    project_id = _project(api)
+    document_id = _document(api, project_id)["document"]["id"]
+    _mark_ready(conn, document_id)
+    item = api.client.post(f"/documents/{document_id}/{path}", json={"count": 1, "topic": topic}).json()
+    conn.execute(f"update {table} set status = %s where id = %s", (status, item["id"]))
+    return project_id, item["id"]
+
+
+@pytest.mark.parametrize(("path", "table", "_link"), STUDY_SETS)
+def test_a_deck_or_quiz_can_be_renamed_and_its_name_cleared(api, conn, path, table, _link):
+    _, item_id = _study_set(api, conn, path, table, topic="mitosis")
+
+    renamed = api.client.patch(f"/{path}/{item_id}", json={"topic": "  Meiosis "})
+
+    assert renamed.status_code == 200
+    assert renamed.json()["topic"] == "Meiosis"
+    assert api.client.get(f"/{path}/{item_id}").json()["topic"] == "Meiosis"
+    cleared = api.client.patch(f"/{path}/{item_id}", json={"topic": "   "})
+    assert cleared.json()["topic"] is None
+    assert api.client.patch(f"/{path}/{item_id}", json={"topic": None}).json()["topic"] is None
+    assert api.client.patch(f"/{path}/{item_id}", json={"topic": "x" * 201}).status_code == 422
+
+
+@pytest.mark.parametrize(("path", "table", "link"), STUDY_SETS)
+def test_deleting_a_deck_or_quiz_removes_it_and_unlinks_its_chat_message(api, conn, path, table, link):
+    project_id, item_id = _study_set(api, conn, path, table)
+    conversation_id = api.client.post(f"/projects/{project_id}/conversations", json={}).json()["id"]
+    conn.execute(
+        f"insert into chat_messages (conversation_id, role, content, {link}) values (%s, 'assistant', 'Here.', %s)",
+        (conversation_id, item_id),
+    )
+
+    response = api.client.delete(f"/{path}/{item_id}")
+
+    assert response.status_code == 204
+    assert api.client.get(f"/{path}/{item_id}").status_code == 404
+    assert api.client.delete(f"/{path}/{item_id}").status_code == 404
+    message = api.client.get(f"/conversations/{conversation_id}/messages").json()[0]
+    assert (message["content"], message[link]) == ("Here.", None)
+
+
+@pytest.mark.parametrize(("path", "table", "_link"), STUDY_SETS)
+def test_a_deck_or_quiz_being_generated_cannot_be_renamed_or_deleted(api, conn, path, table, _link):
+    _, item_id = _study_set(api, conn, path, table, status="pending", topic="mitosis")
+
+    renamed = api.client.patch(f"/{path}/{item_id}", json={"topic": "Meiosis"})
+    deleted = api.client.delete(f"/{path}/{item_id}")
+
+    assert (renamed.status_code, deleted.status_code) == (409, 409)
+    assert renamed.json()["detail"] == "It is still being generated."
+    item = api.client.get(f"/{path}/{item_id}").json()
+    assert (item["status"], item["topic"]) == ("pending", "mitosis")
+
+
+@pytest.mark.parametrize(("path", "table", "_link"), STUDY_SETS)
+def test_a_failed_deck_or_quiz_can_be_deleted(api, conn, path, table, _link):
+    _, item_id = _study_set(api, conn, path, table, status="failed")
+
+    assert api.client.delete(f"/{path}/{item_id}").status_code == 204
+
+
+@pytest.mark.parametrize(("path", "table", "_link"), STUDY_SETS)
+def test_other_users_decks_and_quizzes_cannot_be_renamed_or_deleted(api, conn, path, table, _link):
+    _, item_id = _study_set(api, conn, path, table, topic="mitosis")
+    api.as_user(BOB)
+
+    assert api.client.patch(f"/{path}/{item_id}", json={"topic": "Mine"}).status_code == 404
+    assert api.client.delete(f"/{path}/{item_id}").status_code == 404
+    api.as_user(ALICE)
+    assert api.client.get(f"/{path}/{item_id}").json()["topic"] == "mitosis"
+
+
 # --- conversations -------------------------------------------------------------------
 
 

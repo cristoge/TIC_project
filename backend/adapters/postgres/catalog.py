@@ -16,6 +16,10 @@ DOCUMENT_COLUMNS = (
 )
 
 
+class StillGenerating(Exception):
+    """A deck or quiz cannot change while its generation job may still read or write it."""
+
+
 class PostgresCatalog:
     def __init__(self, conninfo: str):
         self.conninfo = conninfo
@@ -194,6 +198,45 @@ class PostgresCatalog:
                 "where s.id = %s and p.user_id = %s",
                 (artifact_id, user_id),
             ).fetchone()
+
+    def rename_deck(self, user_id: str, deck_id: str, topic: str | None) -> dict | None:
+        renamed = self._edit_set("flashcard_decks", user_id, deck_id, ("update flashcard_decks s set topic = %s from", topic))
+        return self.get_deck(user_id, deck_id) if renamed else None
+
+    def rename_quiz(self, user_id: str, quiz_id: str, topic: str | None) -> dict | None:
+        renamed = self._edit_set("quizzes", user_id, quiz_id, ("update quizzes s set topic = %s from", topic))
+        return self.get_quiz(user_id, quiz_id) if renamed else None
+
+    def delete_deck(self, user_id: str, deck_id: str) -> bool:
+        """Its cards go with it; the chat message that created it keeps its text (on delete set null)."""
+        return self._edit_set("flashcard_decks", user_id, deck_id, ("delete from flashcard_decks s using", None))
+
+    def delete_quiz(self, user_id: str, quiz_id: str) -> bool:
+        """Its questions and attempts go with it; the chat message keeps its text (on delete set null)."""
+        return self._edit_set("quizzes", user_id, quiz_id, ("delete from quizzes s using", None))
+
+    def _edit_set(self, table: str, user_id: str, set_id: str, edit: tuple[str, str | None]) -> bool:
+        """Apply `edit` (the statement up to its join, and the new topic for an update) to one owned deck
+        or quiz. False if the caller does not own it. Raises StillGenerating while it is pending, because
+        its job reads the topic and writes its cards or questions when it runs."""
+        statement, topic = edit
+        params = ([topic] if statement.startswith("update") else []) + [set_id, user_id]
+        with self._connect() as conn:
+            row = conn.execute(
+                f"{statement} {OWNED_DOCUMENT} where d.id = s.document_id and s.id = %s and p.user_id = %s "
+                "and s.status <> 'pending' returning s.id",
+                params,
+            ).fetchone()
+            if row:
+                return True
+            pending = conn.execute(
+                f"select 1 from {table} s join {OWNED_DOCUMENT} on d.id = s.document_id "
+                "where s.id = %s and p.user_id = %s and s.status = 'pending'",
+                (set_id, user_id),
+            ).fetchone()
+        if pending:
+            raise StillGenerating("It is still being generated.")
+        return False
 
     # --- conversations ---------------------------------------------------------------
 

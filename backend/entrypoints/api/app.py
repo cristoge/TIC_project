@@ -10,7 +10,7 @@ from typing import Protocol
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 
-from adapters.postgres.catalog import PostgresCatalog
+from adapters.postgres.catalog import PostgresCatalog, StillGenerating
 from entrypoints.api import schemas
 from entrypoints.api.auth import CurrentUser, JwtVerifier, get_current_user
 from services.study import DocumentNotReady, StudyService
@@ -188,6 +188,32 @@ def create_app(container: Container, jwt_verifier: JwtVerifier | None = None, lo
         except ValueError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return asdict(result)
+
+    def editable(edit):
+        try:
+            return edit()
+        except StillGenerating as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+    @app.patch("/flashcard-decks/{deck_id}", response_model=schemas.DeckOut)
+    def rename_deck(deck_id: uuid.UUID, body: schemas.SetUpdate, me: CurrentUser = Depends(user)):
+        return found(editable(lambda: catalog.rename_deck(me.id, str(deck_id), body.topic)))
+
+    @app.delete("/flashcard-decks/{deck_id}", status_code=status.HTTP_204_NO_CONTENT)
+    def delete_deck(deck_id: uuid.UUID, me: CurrentUser = Depends(user)):
+        if not editable(lambda: catalog.delete_deck(me.id, str(deck_id))):
+            raise HTTPException(status_code=404, detail="Not found.")
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    @app.patch("/quizzes/{quiz_id}", response_model=schemas.QuizOut)
+    def rename_quiz(quiz_id: uuid.UUID, body: schemas.SetUpdate, me: CurrentUser = Depends(user)):
+        return found(editable(lambda: catalog.rename_quiz(me.id, str(quiz_id), body.topic)))
+
+    @app.delete("/quizzes/{quiz_id}", status_code=status.HTTP_204_NO_CONTENT)
+    def delete_quiz(quiz_id: uuid.UUID, me: CurrentUser = Depends(user)):
+        if not editable(lambda: catalog.delete_quiz(me.id, str(quiz_id))):
+            raise HTTPException(status_code=404, detail="Not found.")
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     # --- conversations ---------------------------------------------------------------
 
