@@ -6,7 +6,7 @@ import { ApiError } from "@/shared/api";
 import { createFakeApi, renderWithQueryClient } from "@/shared/testing/query";
 
 import { StudySection } from "./StudySection";
-import { aDeck, aQuiz } from "./testing/artifacts";
+import { aDeck, aQuiz, listedDeck, listedQuiz } from "./testing/artifacts";
 
 const mockApi = createFakeApi();
 const mockPush = jest.fn();
@@ -31,10 +31,18 @@ const quiz = aQuiz({ id: "q1", topic: "Repaso" });
 
 type Server = Record<string, unknown>;
 
+// Like the API, the per-document lists carry counts but not the cards or questions themselves.
+function asListed(path: string, body: unknown) {
+  if (!Array.isArray(body)) return body;
+  if (path.endsWith("/flashcard-decks")) return body.map(listedDeck);
+  if (path.endsWith("/quizzes")) return body.map(listedQuiz);
+  return body;
+}
+
 function serve(server: Server) {
   mockApi.get.mockImplementation(async (path: string) => {
     if (!(path in server)) throw new Error(`Unexpected GET ${path}`);
-    return server[path];
+    return asListed(path, server[path]);
   });
 }
 
@@ -374,7 +382,7 @@ describe("StudySection", () => {
       serve({ ...server, "/documents/d1/flashcard-decks": [generating] });
       await renderWithQueryClient(<StudySection projectId="p1" />);
       expect(await screen.findByText("Generando…")).toBeOnTheScreen();
-      const ready = { ...generating, status: "ready", cards: older.cards };
+      const ready = { ...generating, status: "ready", card_count: 2 };
       serve({ ...server, "/documents/d1/flashcard-decks": [ready] });
 
       await act(() => jest.advanceTimersByTimeAsync(3000));

@@ -156,10 +156,10 @@ class PostgresCatalog:
                                   user_id, summary_id)
 
     def list_decks(self, user_id: str, document_id: str) -> list[dict]:
-        return self._list_artifacts("flashcard_decks s", SET_COLUMNS, user_id, document_id)
+        return self._list_artifacts("flashcard_decks s", DECK_COLUMNS, user_id, document_id)
 
     def get_deck(self, user_id: str, deck_id: str) -> dict | None:
-        deck = self._get_artifact("flashcard_decks s", SET_COLUMNS, user_id, deck_id)
+        deck = self._get_artifact("flashcard_decks s", DECK_COLUMNS, user_id, deck_id)
         if deck:
             with self._connect() as conn:
                 deck["cards"] = conn.execute(
@@ -169,11 +169,11 @@ class PostgresCatalog:
         return deck
 
     def list_quizzes(self, user_id: str, document_id: str) -> list[dict]:
-        return self._list_artifacts("quizzes s", SET_COLUMNS, user_id, document_id)
+        return self._list_artifacts("quizzes s", QUIZ_COLUMNS, user_id, document_id)
 
     def get_quiz(self, user_id: str, quiz_id: str) -> dict | None:
         """The quiz with its questions, without the correct answers."""
-        quiz = self._get_artifact("quizzes s", SET_COLUMNS, user_id, quiz_id)
+        quiz = self._get_artifact("quizzes s", QUIZ_COLUMNS, user_id, quiz_id)
         if quiz:
             with self._connect() as conn:
                 quiz["questions"] = conn.execute(
@@ -309,3 +309,6 @@ class PostgresCatalog:
 
 
 SET_COLUMNS = "s.id, s.document_id, s.topic, s.requested_count, s.status, s.error_message, s.created_at"
+# Lists leave the cards and questions out, so they carry how many there are.
+DECK_COLUMNS = f"{SET_COLUMNS}, (select count(*) from flashcards c where c.deck_id = s.id) as card_count"
+QUIZ_COLUMNS = f"{SET_COLUMNS}, (select count(*) from quiz_questions q where q.quiz_id = s.id) as question_count"

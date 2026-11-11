@@ -130,6 +130,7 @@ class DeckOut(BaseModel):
     status: GenerationStatus
     error_message: str | None
     created_at: datetime
+    card_count: int = Field(description="How many cards it holds; lists leave `cards` empty.")
     cards: list[CardOut] = []
 
 
@@ -148,6 +149,7 @@ class QuizOut(BaseModel):
     status: GenerationStatus
     error_message: str | None
     created_at: datetime
+    question_count: int = Field(description="How many questions it holds; lists leave `questions` empty.")
     questions: list[QuizQuestionOut] = []
 
 

@@ -122,7 +122,8 @@ export function useProjectStudy(projectId: string, kind: StudyKind) {
         documentId: item.document_id,
         topic: item.topic?.trim() || null,
         title: "",
-        count: "cards" in item ? item.cards.length : item.questions.length,
+        // The lists leave the cards and questions out and carry how many there are.
+        count: "card_count" in item ? item.card_count : item.question_count,
         status: item.status,
         error_message: item.error_message,
         created_at: item.created_at,

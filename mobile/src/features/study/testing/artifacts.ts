@@ -17,12 +17,12 @@ export function aSummary(overrides: Partial<Summary> = {}): Summary {
 }
 
 export function aDeck(overrides: Partial<Deck> = {}): Deck {
-  return {
+  const deck = {
     id: "f1",
     document_id: "d1",
     topic: "Grafos",
     requested_count: 2,
-    status: "ready",
+    status: "ready" as const,
     error_message: null,
     created_at: "2026-11-01T10:00:00Z",
     cards: [
@@ -31,15 +31,21 @@ export function aDeck(overrides: Partial<Deck> = {}): Deck {
     ],
     ...overrides,
   };
+  return { card_count: deck.cards.length, ...deck };
+}
+
+/** A deck as the per-document list returns it: its count, without its cards. */
+export function listedDeck(deck: Deck): Deck {
+  return { ...deck, cards: [] };
 }
 
 export function aQuiz(overrides: Partial<Quiz> = {}): Quiz {
-  return {
+  const quiz = {
     id: "q1",
     document_id: "d1",
     topic: null,
     requested_count: 1,
-    status: "ready",
+    status: "ready" as const,
     error_message: null,
     created_at: "2026-11-01T10:00:00Z",
     questions: [
@@ -47,4 +53,10 @@ export function aQuiz(overrides: Partial<Quiz> = {}): Quiz {
     ],
     ...overrides,
   };
+  return { question_count: quiz.questions.length, ...quiz };
+}
+
+/** A quiz as the per-document list returns it: its count, without its questions. */
+export function listedQuiz(quiz: Quiz): Quiz {
+  return { ...quiz, questions: [] };
 }

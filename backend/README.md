@@ -67,7 +67,7 @@ FastAPI app in `entrypoints/api/`. The full contract (bodies, status codes) is t
 | GET, POST | `/documents/{id}/summaries` | POST → 202, queued; 409 if the document is not `ready` |
 | GET, POST | `/documents/{id}/flashcard-decks` | POST `{count: 1-30, topic?}` → 202, queued |
 | GET, POST | `/documents/{id}/quizzes` | POST `{count: 1-30, topic?}` → 202, queued |
-| GET | `/summaries/{id}`, `/flashcard-decks/{id}`, `/quizzes/{id}` | Quiz questions never include the correct answer |
+| GET | `/summaries/{id}`, `/flashcard-decks/{id}`, `/quizzes/{id}` | Quiz questions never include the correct answer. Decks carry `card_count` and quizzes `question_count`; the per-document lists leave `cards` and `questions` empty |
 | PATCH, DELETE | `/flashcard-decks/{id}`, `/quizzes/{id}` | PATCH `{topic}` (blank or null clears it); DELETE also removes its cards or questions and attempts, and the chat message that created it keeps its text. `409` while it is still being generated |
 | POST | `/quizzes/{id}/attempts` | `{answers: {question_id: 0-3}}`, every question once → score and explanations (graded on the server) |
 | GET, POST | `/projects/{id}/conversations` | The chat itself runs in AgentCore Runtime |

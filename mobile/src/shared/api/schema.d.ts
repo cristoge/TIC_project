@@ -369,6 +369,11 @@ export interface components {
              */
             created_at: string;
             /**
+             * Card Count
+             * @description How many cards it holds; lists leave `cards` empty.
+             */
+            card_count: number;
+            /**
              * Cards
              * @default []
              */
@@ -562,6 +567,11 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Question Count
+             * @description How many questions it holds; lists leave `questions` empty.
+             */
+            question_count: number;
             /**
              * Questions
              * @default []

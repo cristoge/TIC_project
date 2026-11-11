@@ -232,6 +232,26 @@ def test_ready_deck_returns_its_cards(api, conn):
     assert [(c["question"], c["answer"], c["page"]) for c in deck["cards"]] == [("Q?", "A.", 2)]
 
 
+def test_deck_and_quiz_lists_count_their_cards_and_questions(api, conn):
+    quiz_id = _ready_quiz(api, conn)
+    document_id = api.client.get(f"/quizzes/{quiz_id}").json()["document_id"]
+    deck_id = api.client.post(f"/documents/{document_id}/flashcard-decks", json={"count": 3}).json()["id"]
+    for position in range(2):
+        conn.execute(
+            "insert into flashcards (deck_id, position, question, answer, page_number) values (%s, %s, 'Q?', 'A.', 1)",
+            (deck_id, position),
+        )
+    conn.execute("update flashcard_decks set status = 'ready' where id = %s", (deck_id,))
+
+    [deck] = api.client.get(f"/documents/{document_id}/flashcard-decks").json()
+    [quiz] = api.client.get(f"/documents/{document_id}/quizzes").json()
+
+    assert (deck["card_count"], deck["requested_count"]) == (2, 3)
+    assert quiz["question_count"] == 2
+    assert api.client.get(f"/flashcard-decks/{deck_id}").json()["card_count"] == 2
+    assert api.client.get(f"/quizzes/{quiz_id}").json()["question_count"] == 2
+
+
 def _ready_quiz(api, conn):
     project_id = _project(api)
     document_id = _document(api, project_id)["document"]["id"]

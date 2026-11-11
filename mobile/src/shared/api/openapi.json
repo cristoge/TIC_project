@@ -1361,6 +1361,11 @@
             "format": "date-time",
             "title": "Created At"
           },
+          "card_count": {
+            "type": "integer",
+            "title": "Card Count",
+            "description": "How many cards it holds; lists leave `cards` empty."
+          },
           "cards": {
             "items": {
               "$ref": "#/components/schemas/CardOut"
@@ -1378,7 +1383,8 @@
           "requested_count",
           "status",
           "error_message",
-          "created_at"
+          "created_at",
+          "card_count"
         ],
         "title": "DeckOut"
       },
@@ -1852,6 +1858,11 @@
             "format": "date-time",
             "title": "Created At"
           },
+          "question_count": {
+            "type": "integer",
+            "title": "Question Count",
+            "description": "How many questions it holds; lists leave `questions` empty."
+          },
           "questions": {
             "items": {
               "$ref": "#/components/schemas/QuizQuestionOut"
@@ -1869,7 +1880,8 @@
           "requested_count",
           "status",
           "error_message",
-          "created_at"
+          "created_at",
+          "question_count"
         ],
         "title": "QuizOut"
       },
