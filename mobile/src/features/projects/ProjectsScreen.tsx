@@ -107,7 +107,11 @@ export function ProjectsScreen() {
       ) : (
         <ProjectList
           projects={projects.data}
-          onOpen={(project) => router.push(`/projects/${project.id}`)}
+          onOpen={(project) => {
+            // Back to the project underneath (opened from its menu), then swap it for this one.
+            if (router.canDismiss()) router.dismissAll();
+            router.replace(`/projects/${project.id}`);
+          }}
           onOptions={(project) => setSheet({ kind: "options", project })}
         />
       )}

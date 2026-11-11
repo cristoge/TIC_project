@@ -8,10 +8,18 @@ import { ProjectsScreen } from "./ProjectsScreen";
 import { aProject } from "./testing/projects";
 
 const mockApi = createFakeApi();
-const mockPush = jest.fn();
+const mockReplace = jest.fn();
+const mockDismissAll = jest.fn();
+let mockCanDismiss = false;
 
 jest.mock("@/core/api", () => ({ getApi: () => mockApi }));
-jest.mock("expo-router", () => ({ useRouter: () => ({ push: mockPush }) }));
+jest.mock("expo-router", () => ({
+  useRouter: () => ({
+    replace: mockReplace,
+    dismissAll: mockDismissAll,
+    canDismiss: () => mockCanDismiss,
+  }),
+}));
 
 const biology = aProject({ id: "p1", name: "Biología", description: "Apuntes del tema 3" });
 const history = aProject({ id: "p2", name: "Historia" });
@@ -76,14 +84,28 @@ describe("ProjectsScreen", () => {
     expect(mockApi.get).toHaveBeenCalledTimes(2);
   });
 
-  it("opens the project screen when a project is tapped", async () => {
+  it("opens a project when it is tapped", async () => {
     mockApi.get.mockResolvedValue([biology]);
     const user = userEvent.setup();
     await renderWithQueryClient(<ProjectsScreen />);
 
     await user.press(await screen.findByText("Biología"));
 
-    expect(mockPush).toHaveBeenCalledWith("/projects/p1");
+    expect(mockReplace).toHaveBeenCalledWith("/projects/p1");
+    expect(mockDismissAll).not.toHaveBeenCalled();
+  });
+
+  it("switches from the project it was opened over", async () => {
+    mockCanDismiss = true;
+    mockApi.get.mockResolvedValue([biology]);
+    const user = userEvent.setup();
+    await renderWithQueryClient(<ProjectsScreen />);
+
+    await user.press(await screen.findByText("Biología"));
+
+    expect(mockDismissAll).toHaveBeenCalledTimes(1);
+    expect(mockReplace).toHaveBeenCalledWith("/projects/p1");
+    mockCanDismiss = false;
   });
 
   describe("create", () => {

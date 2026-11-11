@@ -8,6 +8,6 @@ export {
   type Project,
   type ProjectChanges,
 } from "./api";
-export { ProjectScreen } from "./ProjectScreen";
+export { useLastProject } from "./lastProject";
 export { ProjectsScreen } from "./ProjectsScreen";
 export { projectKeys } from "./queryKeys";

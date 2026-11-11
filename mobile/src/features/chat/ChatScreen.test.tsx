@@ -229,6 +229,75 @@ describe("ChatScreen", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("La respuesta se interrumpió.");
   });
 
+  it("follows another chat it is given, dropping the answer in progress", async () => {
+    const { stream } = heldStream(
+      [
+        { type: "token", data: "Es" },
+        { type: "end", message_id: "m4" },
+      ],
+      1,
+    );
+    mockStream.mockImplementation(stream);
+    mockApi.get.mockImplementation(async (path: string) =>
+      path === "/conversations/c2/messages"
+        ? [aMessage({ id: "m9", role: "user", content: "¿Qué es un árbol?" })]
+        : history,
+    );
+    const { rerender } = await renderWithQueryClient(
+      <ChatScreen projectId="p1" conversationId="c1" />,
+    );
+    await ask("¿Y una arista?");
+    await screen.findByText("Es");
+    const { signal } = mockStream.mock.calls[0][0] as { signal: AbortSignal };
+
+    await rerender(<ChatScreen projectId="p1" conversationId="c2" />);
+
+    expect(await screen.findByText("¿Qué es un árbol?")).toBeOnTheScreen();
+    expect(screen.queryByText("¿Y una arista?")).toBeNull();
+    expect(screen.queryByText("¿Qué es un grafo?")).toBeNull();
+    expect(signal.aborted).toBe(true);
+    expect(screen.getByRole("button", { name: "Enviar" })).toBeOnTheScreen();
+  });
+
+  it("starts empty when it is given a new chat", async () => {
+    const { rerender } = await renderWithQueryClient(
+      <ChatScreen projectId="p1" conversationId="c1" />,
+    );
+    await screen.findByText("¿Qué es un grafo?");
+
+    await rerender(<ChatScreen projectId="p1" conversationId={null} />);
+
+    expect(await screen.findByText("Pregunta sobre tus documentos")).toBeOnTheScreen();
+    expect(screen.queryByText("¿Qué es un grafo?")).toBeNull();
+  });
+
+  it("keeps streaming when the chat it created is handed back to it", async () => {
+    mockApi.post.mockResolvedValue(aConversation({ id: "c9" }));
+    mockApi.get.mockResolvedValue([]);
+    const { stream, release } = heldStream(
+      [
+        { type: "token", data: "Un conjunto." },
+        { type: "end", message_id: "m2" },
+      ],
+      1,
+    );
+    mockStream.mockImplementation(stream);
+    const onCreated = jest.fn();
+    const { rerender } = await renderWithQueryClient(
+      <ChatScreen projectId="p1" conversationId={null} onCreated={onCreated} />,
+    );
+    await ask("¿Qué es un grafo?");
+    await screen.findByText("Un conjunto.");
+    const { signal } = mockStream.mock.calls[0][0] as { signal: AbortSignal };
+
+    // What the route does once the first message has created the chat.
+    await rerender(<ChatScreen projectId="p1" conversationId="c9" onCreated={onCreated} />);
+
+    expect(signal.aborted).toBe(false);
+    expect(screen.getByText("¿Qué es un grafo?")).toBeOnTheScreen();
+    await act(async () => release());
+  });
+
   it("stops reading the answer when the screen closes", async () => {
     const { stream } = heldStream(
       [

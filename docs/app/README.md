@@ -26,18 +26,21 @@ Plan de la app Expo nueva (sustituye a `mobile/`) y contrato que debe cumplir co
 
 ```
 Login
-└─ Proyectos (pantalla inicial)             ⚙ Ajustes en la cabecera
-   └─ Proyecto   [ Chats | Documentos | Estudio ]
-      ├─ Chats       lista + nuevo chat
-      │  └─ Chat     mensajes con citas [n] + tarjetas del agente
-      │              ├─ Resumen    → se lee en la propia tarjeta
-      │              ├─ Flashcards → "Estudiar"
-      │              └─ Test       → "Hacer test" → resultado
-      ├─ Documentos  lista + subir PDF (procesando / listo / error)
-      └─ Estudio     [ Flashcards | Tests ] de todos los documentos + crear
-                     ├─ Flashcards → dar la vuelta a cada tarjeta
-                     └─ Test → una pregunta cada vez → nota y explicaciones
-Ajustes: nombre (perfil), tema sistema/claro/oscuro (se guarda en el móvil), cerrar sesión
+└─ Inicio → chat nuevo del último proyecto usado (o la lista de proyectos si no hay)
+   Proyecto: menú lateral (☰), como en la app de Claude
+   ├─ + Nuevo chat
+   ├─ Nombre del proyecto → Proyectos (cambiar, crear, renombrar, borrar)
+   ├─ Chats       lista de todos los chats
+   │  └─ Chat     mensajes con citas [n] + tarjetas del agente
+   │              ├─ Resumen    → se lee en la propia tarjeta
+   │              ├─ Flashcards → "Estudiar"
+   │              └─ Test       → "Hacer test" → resultado
+   ├─ Documentos  lista + subir PDF (procesando / listo / error)
+   ├─ Estudio     [ Flashcards | Tests ] de todos los documentos + crear
+   │              ├─ Flashcards → dar la vuelta a cada tarjeta
+   │              └─ Test → una pregunta cada vez → nota y explicaciones
+   ├─ Recientes   los 8 últimos chats
+   └─ Nombre y email → Ajustes: nombre, tema sistema/claro/oscuro, cerrar sesión
 ```
 
 - **Todo cuelga del proyecto**: el backend no tiene chats sin proyecto ni listas globales.
@@ -69,19 +72,21 @@ mobile/src/
 ├─ app/                      rutas de Expo Router; solo componen pantallas
 │  ├─ (auth)/login.tsx
 │  └─ (app)/
-│     ├─ index.tsx           Proyectos
+│     ├─ index.tsx           inicio: redirige al último proyecto o a la lista
 │     ├─ settings.tsx
-│     └─ projects/[projectId]/
-│        ├─ index.tsx        Chats | Documentos | Estudio
-│        ├─ chats/[conversationId].tsx
-│        ├─ decks/[deckId].tsx
-│        └─ quizzes/[quizId].tsx
+│     └─ projects/
+│        ├─ index.tsx        Proyectos
+│        └─ [projectId]/
+│           ├─ (menu)/       menú lateral (Drawer): chats/[conversationId], chats, documents, study
+│           ├─ decks/[deckId].tsx      se abren encima del menú, con botón atrás
+│           └─ quizzes/[quizId].tsx
+├─ core/                     cliente de la API y del agente con la sesión, contenido del menú lateral
 ├─ features/                 una carpeta por funcionalidad (api, hooks, componentes)
-│  ├─ auth/  projects/  documents/  chat/  study/
+│  ├─ auth/  projects/  documents/  chat/  study/  settings/
 └─ shared/
    ├─ api/                   cliente HTTP, tipos generados, parser SSE
-   ├─ ui/                    átomos y moléculas
-   ├─ theme/                 tokens y useTheme
+   ├─ ui/                    átomos y moléculas (incluidos Icon e IconButton)
+   ├─ theme/                 tokens, useTheme y el tema elegido
    └─ config/env.ts          lectura y validación de EXPO_PUBLIC_*
 ```
 

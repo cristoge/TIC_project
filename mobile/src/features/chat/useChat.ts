@@ -37,17 +37,39 @@ type Options = {
   onCreated?: (conversationId: string) => void;
 };
 
-export function useChat({ projectId, conversationId: initialId, onCreated }: Options) {
+export function useChat({ projectId, conversationId: givenId, onCreated }: Options) {
   const queryClient = useQueryClient();
-  const [conversationId, setConversationId] = useState(initialId);
+  const [conversationId, setConversationId] = useState(givenId);
   const [turn, setTurn] = useState<Turn | null>(null);
   const [sending, setSending] = useState(false);
+  // Bumped when the screen is handed another chat; its effect drops the answer in progress.
+  const [session, setSession] = useState(0);
+  const [lastGivenId, setLastGivenId] = useState(givenId);
   const messages = useMessages(conversationId);
   // Guards a second send that arrives before `sending` re-renders the composer.
   const busy = useRef(false);
   const request = useRef<AbortController | null>(null);
 
-  useEffect(() => () => request.current?.abort(), []);
+  // The route reuses this screen for every chat of the menu. A chat it is handed starts over, except
+  // the one its own first message just created, which keeps streaming. Adjusted while rendering, as
+  // React recommends for state derived from a changed prop.
+  if (givenId !== lastGivenId) {
+    setLastGivenId(givenId);
+    if (givenId !== conversationId) {
+      setConversationId(givenId);
+      setTurn(null);
+      setSending(false);
+      setSession(session + 1);
+    }
+  }
+
+  useEffect(
+    () => () => {
+      request.current?.abort();
+      busy.current = false;
+    },
+    [session],
+  );
 
   async function create(question: string) {
     const conversation = await createConversation(projectId, titleFrom(question));
