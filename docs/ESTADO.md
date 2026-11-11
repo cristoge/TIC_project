@@ -2,7 +2,7 @@
 
 Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-11-11**. Rama: `migration` (backend y app), subida a GitHub.
 
-> **En una frase:** el backend funciona en local de principio a fin y la app Expo nueva ya tiene **login, proyectos y documentos** probados en el simulador contra ese backend, y el **chat**, todo probado en el simulador; el **estudio** (T7) probado; renombrar y eliminar (T7b) escrito y con tests, falta probarlo. **Siguiente: T7, flashcards y tests.**
+> **En una frase:** el backend funciona en local de principio a fin y la app Expo nueva ya tiene **login, proyectos y documentos** probados en el simulador contra ese backend, y el **chat**, todo probado en el simulador; el **estudio** (T7) probado; renombrar y eliminar (T7b) escrito y con tests, falta probarlo. **Siguiente: probar la T7b y después la T8 (ajustes).**
 
 ## Lo que está hecho
 
@@ -21,7 +21,7 @@ Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-
 | **App: proyectos** (lista, crear, renombrar, eliminar) | **Probado en el simulador** | `mobile/src/features/projects/` |
 | **App: documentos** (subir PDF ≤ 30 MB, estados, renombrar, eliminar) | **Probado en el simulador** con un PDF de 27 MB y 514 páginas | `mobile/src/features/documents/` |
 | **App: chat** (lista de chats, respuestas en streaming, citas `[n]`, tarjetas de resumen, flashcards y test) | **Probado en el simulador** (T6) | `mobile/src/features/chat/`, `mobile/src/features/study/` |
-| **App: estudio** (mazos y tests del proyecto, crearlos, modo estudio, hacer un test y ver la nota) | Hecho (T7), probado en el simulador; renombrar y eliminar (T7b) sin probar | `mobile/src/features/study/` |
+| **App: estudio** (flashcards y tests del proyecto, crearlos, renombrarlos, eliminarlos, modo estudio, hacer un test y ver la nota) | Hecho (T7), probado en el simulador; renombrar y eliminar (T7b) sin probar | `mobile/src/features/study/` |
 | App: ajustes | **Pendiente** (T8) | `odd/tasks/mobile-app.md` |
 | Infraestructura AWS de la app (`infra/app`) | **Aparcada** | — |
 
