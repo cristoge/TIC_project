@@ -22,8 +22,8 @@ export function StudyRow({ item, countLabel, onOpen, onOptions }: Props) {
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ disabled: !ready }}
-        disabled={!ready}
-        onPress={() => onOpen(item)}
+        // Not `disabled`, which would also swallow the long press that opens the options.
+        onPress={ready ? () => onOpen(item) : undefined}
         onLongPress={item.status === "pending" ? undefined : () => onOptions(item)}
         style={({ pressed }) => [styles.main, pressed && styles.pressed]}
       >

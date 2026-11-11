@@ -335,6 +335,17 @@ describe("StudySection", () => {
       );
     });
 
+    it("opens the options of a failed one with a long press", async () => {
+      const failed = aDeck({ id: "f4", topic: "Roto", status: "failed", cards: [] });
+      serve({ ...server, "/documents/d1/flashcard-decks": [failed] });
+      const user = userEvent.setup();
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+
+      await user.longPress(await screen.findByText("Roto"));
+
+      expect(screen.getByRole("button", { name: "Renombrar" })).toBeOnTheScreen();
+    });
+
     it("offers no options while it is being generated", async () => {
       serve({ ...server, "/documents/d1/flashcard-decks": [generating] });
       await renderWithQueryClient(<StudySection projectId="p1" />);
