@@ -13,11 +13,7 @@ import {
 } from "./api";
 import { DocumentList } from "./components/DocumentList";
 import { DocumentNameForm } from "./components/DocumentNameForm";
-import { DocumentOptions } from "./components/DocumentOptions";
 import { nameError, toChanges } from "./documentForm";
-
-// One sheet whose content changes: presenting a second Modal while the first is closing fails on iOS.
-type SheetState = { kind: "options" | "rename"; document: Document };
 
 type FormErrors = { name?: string; form?: string };
 
@@ -30,7 +26,8 @@ export function DocumentsSection({ projectId }: Props) {
   const uploadDocument = useUploadDocument(projectId);
   const renameDocument = useRenameDocument(projectId);
   const deleteDocument = useDeleteDocument(projectId);
-  const [sheet, setSheet] = useState<SheetState | null>(null);
+  // The rename form is the only sheet; the options and the delete confirmation are centred alerts.
+  const [renaming, setRenaming] = useState<Document | null>(null);
   const [name, setName] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   // Guard a second press that arrives before the loading state re-renders the button.
@@ -52,22 +49,22 @@ export function DocumentsSection({ projectId }: Props) {
   function openRename(document: Document) {
     setName(document.name);
     setErrors({});
-    setSheet({ kind: "rename", document });
+    setRenaming(document);
   }
 
-  const closeSheet = () => setSheet(null);
+  const closeSheet = () => setRenaming(null);
 
   async function submitRename() {
-    if (saving.current || sheet?.kind !== "rename") return;
+    if (saving.current || !renaming) return;
     const error = nameError(name);
     setErrors({ name: error });
     if (error) return;
 
-    const changes = toChanges(sheet.document, name);
+    const changes = toChanges(renaming, name);
     if (!changes) return closeSheet();
     saving.current = true;
     try {
-      await renameDocument.mutateAsync({ id: sheet.document.id, changes });
+      await renameDocument.mutateAsync({ id: renaming.id, changes });
       closeSheet();
     } catch (failure) {
       setErrors({ form: messageOf(failure) });
@@ -76,26 +73,37 @@ export function DocumentsSection({ projectId }: Props) {
     }
   }
 
-  // The alert opens over the options sheet and closes it on either answer.
+  // A menu in the middle of the screen, like the one that deletes a chat.
+  function openOptions(document: Document) {
+    Alert.alert(
+      document.name,
+      undefined,
+      [
+        { text: "Renombrar", onPress: () => openRename(document) },
+        { text: "Eliminar", style: "destructive", onPress: () => confirmDelete(document) },
+        { text: "Cancelar", style: "cancel" },
+      ],
+      { cancelable: true },
+    );
+  }
+
   function confirmDelete(document: Document) {
     Alert.alert(
       "¿Eliminar documento?",
       "Se borrarán también sus resúmenes, flashcards y tests.",
       [
-        { text: "Cancelar", style: "cancel", onPress: closeSheet },
+        { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
           style: "destructive",
-          onPress: () => {
-            closeSheet();
+          onPress: () =>
             deleteDocument.mutate(document.id, {
               onError: (failure) =>
                 Alert.alert("No se pudo eliminar el documento", messageOf(failure)),
-            });
-          },
+            }),
         },
       ],
-      { cancelable: true, onDismiss: closeSheet },
+      { cancelable: true },
     );
   }
 
@@ -111,33 +119,18 @@ export function DocumentsSection({ projectId }: Props) {
       ) : documents.isError ? (
         <ErrorState message={documents.error.message} onRetry={() => documents.refetch()} />
       ) : (
-        <DocumentList
-          documents={documents.data}
-          onOptions={(document) => setSheet({ kind: "options", document })}
-        />
+        <DocumentList documents={documents.data} onOptions={openOptions} />
       )}
-      <Sheet
-        visible={sheet !== null}
-        title={sheet?.kind === "rename" ? "Renombrar documento" : (sheet?.document.name ?? "")}
-        onClose={closeSheet}
-      >
-        {sheet?.kind === "options" ? (
-          <DocumentOptions
-            onRename={() => openRename(sheet.document)}
-            onDelete={() => confirmDelete(sheet.document)}
-            onCancel={closeSheet}
-          />
-        ) : sheet ? (
-          <DocumentNameForm
-            name={name}
-            onChange={setName}
-            onSubmit={submitRename}
-            onCancel={closeSheet}
-            nameError={errors.name}
-            error={errors.form}
-            loading={renameDocument.isPending}
-          />
-        ) : null}
+      <Sheet visible={renaming !== null} title="Renombrar documento" onClose={closeSheet}>
+        <DocumentNameForm
+          name={name}
+          onChange={setName}
+          onSubmit={submitRename}
+          onCancel={closeSheet}
+          nameError={errors.name}
+          error={errors.form}
+          loading={renameDocument.isPending}
+        />
       </Sheet>
       <FloatingButton
         icon="upload"

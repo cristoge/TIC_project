@@ -40,10 +40,17 @@ async function openCreateForm() {
   return user;
 }
 
+// Presses a button of the last centred alert, as the user would.
+async function pressAlertButton(text: string) {
+  const buttons = jest.mocked(Alert.alert).mock.calls.at(-1)?.[2] as AlertButton[];
+  await act(async () => buttons.find((button) => button.text === text)?.onPress?.());
+}
+
 async function openRenameForm(name: string) {
+  jest.spyOn(Alert, "alert").mockImplementation(() => {});
   const user = userEvent.setup();
   await user.longPress(await screen.findByText(name));
-  await user.press(screen.getByRole("button", { name: "Renombrar" }));
+  await pressAlertButton("Renombrar");
   return user;
 }
 
@@ -204,6 +211,25 @@ describe("ProjectsScreen", () => {
     });
   });
 
+  it("opens a project's options as a centred menu", async () => {
+    mockApi.get.mockResolvedValue([biology]);
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const user = userEvent.setup();
+    await renderWithQueryClient(<ProjectsScreen />);
+
+    await user.press(await screen.findByRole("button", { name: "Opciones de Biología" }));
+
+    expect(alert).toHaveBeenCalledWith("Biología", undefined, expect.any(Array), {
+      cancelable: true,
+    });
+    const buttons = alert.mock.calls[0][2] as AlertButton[];
+    expect(buttons.map((button) => [button.text, button.style])).toEqual([
+      ["Renombrar", undefined],
+      ["Eliminar", "destructive"],
+      ["Cancelar", "cancel"],
+    ]);
+  });
+
   describe("rename", () => {
     it("prefills the form and sends only the changed name", async () => {
       const renamed = { ...biology, name: "Biología II" };
@@ -260,7 +286,7 @@ describe("ProjectsScreen", () => {
       await renderWithQueryClient(<ProjectsScreen />);
 
       await user.press(await screen.findByRole("button", { name: "Opciones de Biología" }));
-      await user.press(screen.getByRole("button", { name: "Eliminar" }));
+      await pressAlertButton("Eliminar");
 
       expect(alert).toHaveBeenCalledWith(
         "¿Eliminar proyecto?",
@@ -269,7 +295,7 @@ describe("ProjectsScreen", () => {
         expect.anything(),
       );
       expect(mockApi.delete).not.toHaveBeenCalled();
-      const buttons = alert.mock.calls[0][2] as AlertButton[];
+      const buttons = alert.mock.calls[1][2] as AlertButton[];
       expect(buttons.map((button) => button.text)).toEqual(["Cancelar", "Eliminar"]);
       const destructive = buttons.find((button) => button.style === "destructive");
       await act(async () => destructive?.onPress?.());
@@ -288,8 +314,8 @@ describe("ProjectsScreen", () => {
       await renderWithQueryClient(<ProjectsScreen />);
 
       await user.press(await screen.findByRole("button", { name: "Opciones de Biología" }));
-      await user.press(screen.getByRole("button", { name: "Eliminar" }));
-      const buttons = alert.mock.calls[0][2] as AlertButton[];
+      await pressAlertButton("Eliminar");
+      const buttons = alert.mock.calls[1][2] as AlertButton[];
       await act(async () => buttons.find((button) => button.style === "destructive")?.onPress?.());
 
       await waitFor(() =>

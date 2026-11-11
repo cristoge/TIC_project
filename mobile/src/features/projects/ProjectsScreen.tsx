@@ -15,7 +15,6 @@ import {
 import { ProjectForm } from "./components/ProjectForm";
 import { useLastProject } from "./lastProject";
 import { ProjectList } from "./components/ProjectList";
-import { ProjectOptions } from "./components/ProjectOptions";
 import {
   formValues,
   nameError,
@@ -24,9 +23,8 @@ import {
   type ProjectFormValues,
 } from "./projectForm";
 
-// One sheet whose content changes: presenting a second Modal while the first is closing fails on iOS.
-type SheetState =
-  { kind: "create" } | { kind: "options"; project: Project } | { kind: "rename"; project: Project };
+// The create and rename forms share one sheet; the options and the delete confirmation are centred alerts.
+type SheetState = { kind: "create" } | { kind: "rename"; project: Project };
 
 type FormErrors = { name?: string; form?: string };
 
@@ -45,7 +43,7 @@ export function ProjectsScreen() {
   // Guards a second submit that arrives before the loading state re-renders the button.
   const saving = useRef(false);
 
-  function openForm(next: SheetState & { kind: "create" | "rename" }) {
+  function openForm(next: SheetState) {
     setValues(formValues(next.kind === "rename" ? next.project : undefined));
     setErrors({});
     setSheet(next);
@@ -54,7 +52,7 @@ export function ProjectsScreen() {
   const closeSheet = () => setSheet(null);
 
   async function submit() {
-    if (saving.current || (sheet?.kind !== "create" && sheet?.kind !== "rename")) return;
+    if (saving.current || !sheet) return;
     const error = nameError(values);
     setErrors({ name: error });
     if (error) return;
@@ -77,26 +75,37 @@ export function ProjectsScreen() {
     }
   }
 
-  // The alert opens over the options sheet and closes it on either answer.
+  // A menu in the middle of the screen, like the one that deletes a chat.
+  function openOptions(project: Project) {
+    Alert.alert(
+      project.name,
+      undefined,
+      [
+        { text: "Renombrar", onPress: () => openForm({ kind: "rename", project }) },
+        { text: "Eliminar", style: "destructive", onPress: () => confirmDelete(project) },
+        { text: "Cancelar", style: "cancel" },
+      ],
+      { cancelable: true },
+    );
+  }
+
   function confirmDelete(project: Project) {
     Alert.alert(
       "¿Eliminar proyecto?",
       "Se borrarán también sus documentos, chats y flashcards.",
       [
-        { text: "Cancelar", style: "cancel", onPress: closeSheet },
+        { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
           style: "destructive",
-          onPress: () => {
-            closeSheet();
+          onPress: () =>
             deleteProject.mutate(project.id, {
               onError: (failure) =>
                 Alert.alert("No se pudo eliminar el proyecto", messageOf(failure)),
-            });
-          },
+            }),
         },
       ],
-      { cancelable: true, onDismiss: closeSheet },
+      { cancelable: true },
     );
   }
 
@@ -134,37 +143,27 @@ export function ProjectsScreen() {
             if (router.canDismiss()) router.dismissAll();
             router.replace(`/projects/${project.id}`);
           }}
-          onOptions={(project) => setSheet({ kind: "options", project })}
+          onOptions={openOptions}
         />
       )}
-      <Sheet visible={sheet !== null} title={sheetTitle(sheet)} onClose={closeSheet}>
-        {sheet?.kind === "options" ? (
-          <ProjectOptions
-            onRename={() => openForm({ kind: "rename", project: sheet.project })}
-            onDelete={() => confirmDelete(sheet.project)}
-            onCancel={closeSheet}
-          />
-        ) : sheet ? (
-          <ProjectForm
-            values={values}
-            onChange={setValues}
-            submitLabel={sheet.kind === "create" ? "Crear" : "Guardar"}
-            onSubmit={submit}
-            onCancel={closeSheet}
-            nameError={errors.name}
-            error={errors.form}
-            loading={createProject.isPending || updateProject.isPending}
-          />
-        ) : null}
+      <Sheet
+        visible={sheet !== null}
+        title={sheet?.kind === "rename" ? "Renombrar proyecto" : "Nuevo proyecto"}
+        onClose={closeSheet}
+      >
+        <ProjectForm
+          values={values}
+          onChange={setValues}
+          submitLabel={sheet?.kind === "rename" ? "Guardar" : "Crear"}
+          onSubmit={submit}
+          onCancel={closeSheet}
+          nameError={errors.name}
+          error={errors.form}
+          loading={createProject.isPending || updateProject.isPending}
+        />
       </Sheet>
     </Screen>
   );
-}
-
-function sheetTitle(sheet: SheetState | null): string {
-  if (sheet?.kind === "options") return sheet.project.name;
-  if (sheet?.kind === "rename") return "Renombrar proyecto";
-  return "Nuevo proyecto";
 }
 
 function messageOf(failure: unknown): string {

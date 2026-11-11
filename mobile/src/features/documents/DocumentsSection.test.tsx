@@ -53,6 +53,12 @@ afterAll(() => {
   globalThis.fetch = originalFetch;
 });
 
+// Presses a button of the last centred alert, as the user would.
+async function pressAlertButton(text: string) {
+  const buttons = jest.mocked(Alert.alert).mock.calls.at(-1)?.[2] as AlertButton[];
+  await act(async () => buttons.find((button) => button.text === text)?.onPress?.());
+}
+
 async function pressUpload() {
   const user = userEvent.setup();
   await user.press(await screen.findByRole("button", { name: "Subir PDF" }));
@@ -223,11 +229,31 @@ describe("DocumentsSection", () => {
     });
   });
 
+  it("opens a document's options as a centred menu", async () => {
+    mockApi.get.mockResolvedValue([tema1]);
+    const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+    const user = userEvent.setup();
+    await renderWithQueryClient(<DocumentsSection projectId="p1" />);
+
+    await user.press(await screen.findByRole("button", { name: "Opciones de Tema 1.pdf" }));
+
+    expect(alert).toHaveBeenCalledWith("Tema 1.pdf", undefined, expect.any(Array), {
+      cancelable: true,
+    });
+    const buttons = alert.mock.calls[0][2] as AlertButton[];
+    expect(buttons.map((button) => [button.text, button.style])).toEqual([
+      ["Renombrar", undefined],
+      ["Eliminar", "destructive"],
+      ["Cancelar", "cancel"],
+    ]);
+  });
+
   describe("rename", () => {
     async function openRenameForm() {
+      jest.spyOn(Alert, "alert").mockImplementation(() => {});
       const user = userEvent.setup();
       await user.longPress(await screen.findByText("Tema 1.pdf"));
-      await user.press(screen.getByRole("button", { name: "Renombrar" }));
+      await pressAlertButton("Renombrar");
       return user;
     }
 
@@ -293,7 +319,7 @@ describe("DocumentsSection", () => {
       const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
       const user = userEvent.setup();
       await user.press(await screen.findByRole("button", { name: "Opciones de Tema 1.pdf" }));
-      await user.press(screen.getByRole("button", { name: "Eliminar" }));
+      await pressAlertButton("Eliminar");
       return alert;
     }
 
@@ -311,7 +337,7 @@ describe("DocumentsSection", () => {
         expect.anything(),
       );
       expect(mockApi.delete).not.toHaveBeenCalled();
-      const buttons = alert.mock.calls[0][2] as AlertButton[];
+      const buttons = alert.mock.calls[1][2] as AlertButton[];
       expect(buttons.map((button) => [button.text, button.style])).toEqual([
         ["Cancelar", "cancel"],
         ["Eliminar", "destructive"],
@@ -328,7 +354,7 @@ describe("DocumentsSection", () => {
       await renderWithQueryClient(<DocumentsSection projectId="p1" />);
 
       const alert = await pressDelete();
-      const buttons = alert.mock.calls[0][2] as AlertButton[];
+      const buttons = alert.mock.calls[1][2] as AlertButton[];
       await act(async () => buttons[0].onPress?.());
 
       expect(mockApi.delete).not.toHaveBeenCalled();
@@ -342,7 +368,7 @@ describe("DocumentsSection", () => {
       await renderWithQueryClient(<DocumentsSection projectId="p1" />);
 
       const alert = await pressDelete();
-      const buttons = alert.mock.calls[0][2] as AlertButton[];
+      const buttons = alert.mock.calls[1][2] as AlertButton[];
       await act(async () => buttons[1].onPress?.());
 
       await waitFor(() =>
