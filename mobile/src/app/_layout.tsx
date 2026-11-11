@@ -10,6 +10,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
+import { LogBox } from "react-native";
 
 import { useStackScreenOptions } from "@/core/navigation";
 import { useSession } from "@/features/auth";
@@ -17,6 +18,11 @@ import { createQueryClient } from "@/shared/api";
 import { useTheme, useThemePreference } from "@/shared/theme";
 
 SplashScreen.preventAutoHideAsync();
+
+// react-native-drawer-layout (the side menu, bundled with expo-router) passes dependency lists to
+// Reanimated hooks, which Reanimated 4 ignores on native and warns about once in development. The
+// menu works the same; drop this when the library stops passing them.
+LogBox.ignoreLogs(["[Reanimated] Dependencies should only be used on the web"]);
 
 export default function RootLayout() {
   const theme = useTheme();
