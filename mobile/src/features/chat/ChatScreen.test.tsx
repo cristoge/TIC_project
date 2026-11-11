@@ -56,6 +56,29 @@ describe("ChatScreen", () => {
     expect(mockApi.get).toHaveBeenCalledWith("/summaries/s1");
   });
 
+  it("opens a deck or a quiz from its card", async () => {
+    mockApi.get.mockImplementation(async (path: string) => {
+      if (path === "/conversations/c1/messages") {
+        return [
+          aMessage({ id: "m2", content: "Aquí tienes.", flashcard_deck_id: "f1", quiz_id: "q1" }),
+        ];
+      }
+      return path === "/flashcard-decks/f1"
+        ? { id: "f1", status: "ready", topic: null, error_message: null, cards: [] }
+        : { id: "q1", status: "ready", topic: null, error_message: null, questions: [] };
+    });
+    const onOpenArtifact = jest.fn();
+    const user = userEvent.setup();
+    await renderWithQueryClient(
+      <ChatScreen projectId="p1" conversationId="c1" onOpenArtifact={onOpenArtifact} />,
+    );
+
+    await user.press(await screen.findByRole("button", { name: "Estudiar" }));
+    expect(onOpenArtifact).toHaveBeenLastCalledWith({ kind: "flashcards", id: "f1" });
+    await user.press(screen.getByRole("button", { name: "Hacer test" }));
+    expect(onOpenArtifact).toHaveBeenLastCalledWith({ kind: "quiz", id: "q1" });
+  });
+
   it("opens a citation with its document and page", async () => {
     const user = userEvent.setup();
     await renderWithQueryClient(<ChatScreen projectId="p1" conversationId="c1" />);

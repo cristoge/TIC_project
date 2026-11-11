@@ -27,20 +27,22 @@ Plan de la app Expo nueva (sustituye a `mobile/`) y contrato que debe cumplir co
 ```
 Login
 └─ Proyectos (pantalla inicial)             ⚙ Ajustes en la cabecera
-   └─ Proyecto   [ Chats | Documentos | Flashcards ]
+   └─ Proyecto   [ Chats | Documentos | Estudio ]
       ├─ Chats       lista + nuevo chat
       │  └─ Chat     mensajes con citas [n] + tarjetas del agente
       │              ├─ Resumen    → se lee en la propia tarjeta
       │              ├─ Flashcards → "Estudiar"
       │              └─ Test       → "Hacer test" → resultado
       ├─ Documentos  lista + subir PDF (procesando / listo / error)
-      └─ Flashcards  mazos de todos los documentos → estudiar
+      └─ Estudio     [ Mazos | Tests ] de todos los documentos + crear
+                     ├─ Mazo → dar la vuelta a cada tarjeta
+                     └─ Test → una pregunta cada vez → nota y explicaciones
 Ajustes: nombre (perfil), tema claro/oscuro, cerrar sesión
 ```
 
 - **Todo cuelga del proyecto**: el backend no tiene chats sin proyecto ni listas globales.
-- **Flashcards del proyecto**: la API da los mazos por documento (`GET /documents/{id}/flashcard-decks`), así que la pestaña junta los de cada documento. Si llega a pesar, se añade `GET /projects/{id}/flashcard-decks` al backend.
-- **Resumen, flashcards y test se crean desde el chat**: el agente tiene las herramientas `create_summary`, `create_flashcards` y `create_quiz`, y la app los muestra como tarjetas.
+- **Estudio del proyecto**: la API da los mazos y los tests por documento (`GET /documents/{id}/flashcard-decks` y `/quizzes`), así que la pestaña junta los de cada documento listo. Si llega a pesar, se añaden listas por proyecto al backend. Se crean desde la propia pestaña (documento, tema opcional y de 1 a 30) o desde el chat; no se pueden borrar porque la API no lo permite.
+- **Resumen, flashcards y test también se crean desde el chat**: el agente tiene las herramientas `create_summary`, `create_flashcards` y `create_quiz`, y la app los muestra como tarjetas.
 
 ## Estética
 
@@ -69,7 +71,7 @@ mobile/src/
 │     ├─ index.tsx           Proyectos
 │     ├─ settings.tsx
 │     └─ projects/[projectId]/
-│        ├─ index.tsx        Chats | Documentos | Flashcards
+│        ├─ index.tsx        Chats | Documentos | Estudio
 │        ├─ chats/[conversationId].tsx
 │        ├─ decks/[deckId].tsx
 │        └─ quizzes/[quizId].tsx

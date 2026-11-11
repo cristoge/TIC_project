@@ -26,6 +26,9 @@ export default function Chat() {
         conversationId={conversationId === NEW ? null : conversationId}
         // Keeps the route pointing at the chat once its first message has created it.
         onCreated={(id) => router.setParams({ conversationId: id })}
+        onOpenArtifact={({ kind, id }) =>
+          router.push(`/projects/${projectId}/${kind === "quiz" ? "quizzes" : "decks"}/${id}`)
+        }
         keyboardOffset={insets.top + HEADER_HEIGHT}
       />
     </>
