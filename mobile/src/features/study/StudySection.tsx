@@ -3,7 +3,15 @@ import { useRef, useState } from "react";
 import { ActivityIndicator, Alert, FlatList, View } from "react-native";
 
 import { useTheme, useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, Button, EmptyState, ErrorState, SegmentedControl, Sheet } from "@/shared/ui";
+import {
+  AppText,
+  EmptyState,
+  ErrorState,
+  FLOATING_BUTTON_SPACE,
+  FloatingButton,
+  SegmentedControl,
+  Sheet,
+} from "@/shared/ui";
 
 import {
   useCreateStudyItem,
@@ -155,12 +163,6 @@ export function StudySection({ projectId }: Props) {
   return (
     <View style={styles.section}>
       <SegmentedControl options={KINDS} value={kind} onChange={setKind} />
-      <Button
-        label={text.create}
-        icon="add"
-        onPress={openForm}
-        disabled={study.isPending || !canCreate}
-      />
       {!study.isPending && !canCreate ? (
         <AppText variant="caption" color="textMuted">
           Sube un PDF primero.
@@ -229,6 +231,12 @@ export function StudySection({ projectId }: Props) {
           />
         ) : null}
       </Sheet>
+      <FloatingButton
+        icon="add"
+        label={text.create}
+        onPress={openForm}
+        disabled={study.isPending || !canCreate}
+      />
     </View>
   );
 }
@@ -240,5 +248,5 @@ function messageOf(failure: unknown): string {
 const createStyles = (theme: Theme) => ({
   section: { flex: 1, gap: theme.spacing.lg },
   list: { flex: 1 },
-  content: { paddingBottom: theme.spacing.xl },
+  content: { paddingBottom: FLOATING_BUTTON_SPACE },
 });

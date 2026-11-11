@@ -1,7 +1,7 @@
 import { FlatList } from "react-native";
 
 import { useThemedStyles, type Theme } from "@/shared/theme";
-import { EmptyState } from "@/shared/ui";
+import { EmptyState, FLOATING_BUTTON_SPACE } from "@/shared/ui";
 
 import type { Document } from "../api";
 import { DocumentRow } from "./DocumentRow";
@@ -34,5 +34,5 @@ export function DocumentList({ documents, onOptions }: Props) {
 
 const createStyles = (theme: Theme) => ({
   list: { flex: 1 },
-  content: { paddingBottom: theme.spacing.xl },
+  content: { paddingBottom: FLOATING_BUTTON_SPACE },
 });

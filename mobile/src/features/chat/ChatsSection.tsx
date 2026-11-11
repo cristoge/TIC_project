@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { ActivityIndicator, Alert, FlatList, View } from "react-native";
 
 import { useTheme, useThemedStyles, type Theme } from "@/shared/theme";
-import { Button, EmptyState, ErrorState } from "@/shared/ui";
+import { EmptyState, ErrorState, FLOATING_BUTTON_SPACE, FloatingButton } from "@/shared/ui";
 
 import { useConversations, useDeleteConversation, type Conversation } from "./api";
 import { ConversationRow } from "./components/ConversationRow";
@@ -37,12 +37,6 @@ export function ChatsSection({ projectId }: Props) {
 
   return (
     <View style={styles.section}>
-      {/* The conversation is created by its first message, so an unused chat leaves nothing behind. */}
-      <Button
-        label="Nuevo chat"
-        icon="newChat"
-        onPress={() => router.push(`/projects/${projectId}/chats/new`)}
-      />
       {conversations.isPending ? (
         <ActivityIndicator color={theme.colors.textMuted} />
       ) : conversations.isError ? (
@@ -71,6 +65,12 @@ export function ChatsSection({ projectId }: Props) {
           contentContainerStyle={styles.content}
         />
       )}
+      {/* The conversation is created by its first message, so an unused chat leaves nothing behind. */}
+      <FloatingButton
+        icon="newChat"
+        label="Nuevo chat"
+        onPress={() => router.push(`/projects/${projectId}/chats/new`)}
+      />
     </View>
   );
 }
@@ -78,5 +78,5 @@ export function ChatsSection({ projectId }: Props) {
 const createStyles = (theme: Theme) => ({
   section: { flex: 1, gap: theme.spacing.lg },
   list: { flex: 1 },
-  content: { paddingBottom: theme.spacing.xl },
+  content: { paddingBottom: FLOATING_BUTTON_SPACE },
 });

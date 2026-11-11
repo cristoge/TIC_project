@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 
 import { useTheme, useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, Button, ErrorState, Sheet } from "@/shared/ui";
+import { AppText, ErrorState, FloatingButton, Sheet } from "@/shared/ui";
 
 import {
   useDeleteDocument,
@@ -101,7 +101,6 @@ export function DocumentsSection({ projectId }: Props) {
 
   return (
     <View style={styles.section}>
-      <Button label="Subir PDF" icon="upload" onPress={upload} loading={uploadDocument.isPending} />
       {uploadDocument.error ? (
         <AppText color="danger" accessibilityRole="alert">
           {uploadDocument.error.message}
@@ -140,6 +139,12 @@ export function DocumentsSection({ projectId }: Props) {
           />
         ) : null}
       </Sheet>
+      <FloatingButton
+        icon="upload"
+        label="Subir PDF"
+        onPress={upload}
+        loading={uploadDocument.isPending}
+      />
     </View>
   );
 }
