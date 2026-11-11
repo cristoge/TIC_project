@@ -1,12 +1,14 @@
 import { View } from "react-native";
 
 import { useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, Button, TextField } from "@/shared/ui";
 
-import { NAME_MAX_LENGTH } from "../documentForm";
+import { AppText } from "./AppText";
+import { Button } from "./Button";
+import { TextField } from "./TextField";
 
 type Props = {
   name: string;
+  maxLength: number;
   onChange: (name: string) => void;
   onSubmit: () => void;
   onCancel: () => void;
@@ -16,8 +18,10 @@ type Props = {
   loading?: boolean;
 };
 
-export function DocumentNameForm({
+/** A rename form: one name field with "Guardar" and "Cancelar". */
+export function NameForm({
   name,
+  maxLength,
   onChange,
   onSubmit,
   onCancel,
@@ -34,7 +38,7 @@ export function DocumentNameForm({
         value={name}
         onChangeText={onChange}
         error={nameError}
-        maxLength={NAME_MAX_LENGTH}
+        maxLength={maxLength}
         returnKeyType="done"
         onSubmitEditing={onSubmit}
       />

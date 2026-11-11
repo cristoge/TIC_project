@@ -270,7 +270,8 @@ export interface paths {
         delete: operations["delete_conversation_conversations__conversation_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Rename Conversation */
+        patch: operations["rename_conversation_conversations__conversation_id__patch"];
         trace?: never;
     };
 }
@@ -339,6 +340,14 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /**
+         * ConversationUpdate
+         * @description A new title; it is trimmed and cannot be blank.
+         */
+        ConversationUpdate: {
+            /** Title */
+            title: string;
         };
         /** DeckOut */
         DeckOut: {
@@ -1582,6 +1591,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_conversation_conversations__conversation_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConversationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationOut"];
+                };
             };
             /** @description Validation Error */
             422: {

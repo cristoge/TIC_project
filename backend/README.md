@@ -72,6 +72,7 @@ FastAPI app in `entrypoints/api/`. The full contract (bodies, status codes) is t
 | POST | `/quizzes/{id}/attempts` | `{answers: {question_id: 0-3}}`, every question once → score and explanations (graded on the server) |
 | GET, POST | `/projects/{id}/conversations` | The chat itself runs in AgentCore Runtime |
 | GET | `/conversations/{id}/messages` | Messages with their sources (document, page) and created artifacts |
+| PATCH | `/conversations/{id}` | Rename: `{title}`, trimmed, 1–200 characters |
 | DELETE | `/conversations/{id}` | |
 
 Every resource is owner-scoped: another user's id answers 404, never 403.

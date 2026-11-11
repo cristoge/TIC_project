@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 
 import { useTheme, useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, ErrorState, FloatingButton, Sheet } from "@/shared/ui";
+import { AppText, ErrorState, FloatingButton, NameForm, Sheet } from "@/shared/ui";
 
 import {
   useDeleteDocument,
@@ -12,8 +12,7 @@ import {
   type Document,
 } from "./api";
 import { DocumentList } from "./components/DocumentList";
-import { DocumentNameForm } from "./components/DocumentNameForm";
-import { nameError, toChanges } from "./documentForm";
+import { NAME_MAX_LENGTH, nameError, toChanges } from "./documentForm";
 
 type FormErrors = { name?: string; form?: string };
 
@@ -122,8 +121,9 @@ export function DocumentsSection({ projectId }: Props) {
         <DocumentList documents={documents.data} onOptions={openOptions} />
       )}
       <Sheet visible={renaming !== null} title="Renombrar documento" onClose={closeSheet}>
-        <DocumentNameForm
+        <NameForm
           name={name}
+          maxLength={NAME_MAX_LENGTH}
           onChange={setName}
           onSubmit={submitRename}
           onCancel={closeSheet}

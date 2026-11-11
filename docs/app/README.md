@@ -30,7 +30,7 @@ Login
    Proyecto: menú lateral (☰), como en la app de Claude
    ├─ + Nuevo chat
    ├─ Nombre del proyecto → Proyectos (cambiar, crear, renombrar, borrar)
-   ├─ Chats       lista de todos los chats
+   ├─ Chats       lista de todos los chats («⋯»: renombrar o eliminar)
    │  └─ Chat     mensajes con citas [n] + tarjetas del agente
    │              ├─ Resumen    → se lee en la propia tarjeta
    │              ├─ Flashcards → "Estudiar"

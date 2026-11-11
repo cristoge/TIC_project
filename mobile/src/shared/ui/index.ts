@@ -8,6 +8,7 @@ export * from "./FloatingButton";
 export * from "./Icon";
 export * from "./IconButton";
 export * from "./ListItem";
+export * from "./NameForm";
 export * from "./RadioOption";
 export * from "./Screen";
 export * from "./SegmentedControl";

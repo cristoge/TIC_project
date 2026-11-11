@@ -9,10 +9,10 @@ import { conversationDate, conversationTitle } from "../conversationDetails";
 type Props = {
   conversation: Conversation;
   onOpen: (conversation: Conversation) => void;
-  onDelete: (conversation: Conversation) => void;
+  onOptions: (conversation: Conversation) => void;
 };
 
-export function ConversationRow({ conversation, onOpen, onDelete }: Props) {
+export function ConversationRow({ conversation, onOpen, onOptions }: Props) {
   const styles = useThemedStyles(createStyles);
   const title = conversationTitle(conversation);
 
@@ -21,7 +21,7 @@ export function ConversationRow({ conversation, onOpen, onDelete }: Props) {
       <Pressable
         accessibilityRole="button"
         onPress={() => onOpen(conversation)}
-        onLongPress={() => onDelete(conversation)}
+        onLongPress={() => onOptions(conversation)}
         style={({ pressed }) => [styles.main, pressed && styles.pressed]}
       >
         <AppText variant="label" numberOfLines={2}>
@@ -32,9 +32,9 @@ export function ConversationRow({ conversation, onOpen, onDelete }: Props) {
         </AppText>
       </Pressable>
       <IconButton
-        icon="delete"
-        label={`Eliminar ${title}`}
-        onPress={() => onDelete(conversation)}
+        icon="options"
+        label={`Opciones de ${title}`}
+        onPress={() => onOptions(conversation)}
       />
     </ListItem>
   );

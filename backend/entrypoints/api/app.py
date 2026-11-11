@@ -231,6 +231,10 @@ def create_app(container: Container, jwt_verifier: JwtVerifier | None = None, lo
     def list_messages(conversation_id: uuid.UUID, me: CurrentUser = Depends(user)):
         return found(catalog.list_messages(me.id, str(conversation_id)))
 
+    @app.patch("/conversations/{conversation_id}", response_model=schemas.ConversationOut)
+    def rename_conversation(conversation_id: uuid.UUID, body: schemas.ConversationUpdate, me: CurrentUser = Depends(user)):
+        return found(catalog.rename_conversation(me.id, str(conversation_id), body.title))
+
     @app.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
     def delete_conversation(conversation_id: uuid.UUID, me: CurrentUser = Depends(user)):
         if not catalog.delete_conversation(me.id, str(conversation_id)):

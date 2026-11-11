@@ -283,6 +283,15 @@ class PostgresCatalog:
             message["sources"] = by_message.get(message["id"], [])
         return messages
 
+    def rename_conversation(self, user_id: str, conversation_id: str, title: str) -> dict | None:
+        with self._connect() as conn:
+            return conn.execute(
+                "update conversations c set title = %s from projects p "
+                "where p.id = c.project_id and c.id = %s and p.user_id = %s "
+                "returning c.id, c.project_id, c.title, c.created_at, c.updated_at",
+                (title, conversation_id, user_id),
+            ).fetchone()
+
     def delete_conversation(self, user_id: str, conversation_id: str) -> bool:
         with self._connect() as conn:
             row = conn.execute(

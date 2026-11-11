@@ -19,6 +19,17 @@ export function createConversation(projectId: string, title: string) {
   return getApi().post<Conversation>(`/projects/${projectId}/conversations`, { title });
 }
 
+export const TITLE_MAX_LENGTH = 200;
+
+export function useRenameConversation(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      getApi().patch<Conversation>(`/conversations/${id}`, { title }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: chatKeys.list(projectId) }),
+  });
+}
+
 export function useDeleteConversation(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({

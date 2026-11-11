@@ -176,6 +176,19 @@ class ConversationIn(BaseModel):
     title: str | None = Field(default=None, max_length=200)
 
 
+class ConversationUpdate(BaseModel):
+    """A new title; it is trimmed and cannot be blank."""
+
+    title: str = Field(max_length=200)
+
+    @field_validator("title")
+    @classmethod
+    def title_is_not_blank(cls, title: str) -> str:
+        if not title.strip():
+            raise ValueError("The title cannot be blank.")
+        return title.strip()
+
+
 class ConversationOut(BaseModel):
     id: UUID
     project_id: UUID

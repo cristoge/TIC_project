@@ -1,4 +1,5 @@
 import random
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
@@ -426,6 +427,20 @@ def test_a_question_and_answer_with_the_same_timestamp_are_listed_question_first
     assert [m["role"] for m in messages] == ["user", "assistant"]
 
 
+def test_rename_a_conversation(api):
+    project_id = _project(api)
+    conversation_id = api.client.post(f"/projects/{project_id}/conversations", json={"title": "What is"}).json()["id"]
+
+    renamed = api.client.patch(f"/conversations/{conversation_id}", json={"title": "  Mitosis  "})
+
+    assert renamed.status_code == 200
+    assert renamed.json()["title"] == "Mitosis"
+    assert [c["title"] for c in api.client.get(f"/projects/{project_id}/conversations").json()] == ["Mitosis"]
+    assert api.client.patch(f"/conversations/{conversation_id}", json={"title": "   "}).status_code == 422
+    assert api.client.patch(f"/conversations/{conversation_id}", json={"title": "x" * 201}).status_code == 422
+    assert api.client.patch(f"/conversations/{uuid.uuid4()}", json={"title": "Mine"}).status_code == 404
+
+
 def test_other_users_conversations_are_not_found(api):
     project_id = _project(api)
     conversation_id = api.client.post(f"/projects/{project_id}/conversations", json={}).json()["id"]
@@ -433,4 +448,5 @@ def test_other_users_conversations_are_not_found(api):
 
     assert api.client.get(f"/conversations/{conversation_id}/messages").status_code == 404
     assert api.client.delete(f"/conversations/{conversation_id}").status_code == 404
+    assert api.client.patch(f"/conversations/{conversation_id}", json={"title": "Mine"}).status_code == 404
     assert api.client.post(f"/projects/{project_id}/conversations", json={}).status_code == 404
