@@ -3,16 +3,19 @@ import { View } from "react-native";
 import { useThemedStyles, type Theme } from "@/shared/theme";
 
 import { AppText } from "./AppText";
+import { Button } from "./Button";
 import { Icon, type IconName } from "./Icon";
 
 type Props = {
   title: string;
   message: string;
   icon?: IconName;
+  /** The one thing to do next, such as creating the first item. */
+  action?: { label: string; onPress: () => void };
 };
 
 /** What a list shows before it has anything in it. */
-export function EmptyState({ title, message, icon }: Props) {
+export function EmptyState({ title, message, icon, action }: Props) {
   const styles = useThemedStyles(createStyles);
   return (
     <View style={styles.container}>
@@ -23,6 +26,11 @@ export function EmptyState({ title, message, icon }: Props) {
       <AppText color="textMuted" style={styles.text}>
         {message}
       </AppText>
+      {action ? (
+        <View style={styles.action}>
+          <Button label={action.label} icon="add" onPress={action.onPress} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -35,4 +43,5 @@ const createStyles = (theme: Theme) => ({
     paddingHorizontal: theme.spacing.lg,
   },
   text: { textAlign: "center" as const },
+  action: { paddingTop: theme.spacing.md },
 });

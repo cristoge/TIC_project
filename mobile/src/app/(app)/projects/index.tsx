@@ -6,7 +6,8 @@ import { SettingsButton } from "@/features/settings";
 export default function Projects() {
   return (
     <>
-      <Stack.Screen options={{ title: "Proyectos", headerRight: () => <SettingsButton /> }} />
+      {/* The screen shows its own large title, so the bar keeps only the settings button. */}
+      <Stack.Screen options={{ title: "", headerRight: () => <SettingsButton /> }} />
       <ProjectsScreen />
     </>
   );

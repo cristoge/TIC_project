@@ -4,6 +4,7 @@ import { Alert, type AlertButton } from "react-native";
 import { ApiError } from "@/shared/api";
 import { createFakeApi, renderWithQueryClient } from "@/shared/testing/query";
 
+import { useLastProject } from "./lastProject";
 import { ProjectsScreen } from "./ProjectsScreen";
 import { aProject } from "./testing/projects";
 
@@ -22,7 +23,7 @@ jest.mock("expo-router", () => ({
 }));
 
 const biology = aProject({ id: "p1", name: "Biología", description: "Apuntes del tema 3" });
-const history = aProject({ id: "p2", name: "Historia" });
+const history = aProject({ id: "p2", name: "Historia", updated_at: "2026-11-05T09:00:00Z" });
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -58,8 +59,32 @@ describe("ProjectsScreen", () => {
     expect(mockApi.get).toHaveBeenCalledWith("/projects");
   });
 
-  it("shows the empty state when there are no projects", async () => {
+  it("heads the list with its title, how many there are and a compact add button", async () => {
+    mockApi.get.mockResolvedValue([biology, history]);
+
+    await renderWithQueryClient(<ProjectsScreen />);
+
+    expect(await screen.findByText("2 proyectos")).toBeOnTheScreen();
+    expect(screen.getByRole("header", { name: "Proyectos" })).toBeOnTheScreen();
+    expect(screen.getByRole("button", { name: "Nuevo proyecto" })).toBeOnTheScreen();
+  });
+
+  it("shows when each project was last changed and marks the current one", async () => {
+    mockApi.get.mockResolvedValue([biology, history]);
+    useLastProject.setState({ projectId: "p2", restored: true });
+
+    await renderWithQueryClient(<ProjectsScreen />);
+
+    expect(await screen.findByText("Actualizado el 1 nov")).toBeOnTheScreen();
+    expect(screen.getByText("Actualizado el 5 nov")).toBeOnTheScreen();
+    expect(screen.getAllByText("Actual")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Historia, proyecto actual" })).toBeOnTheScreen();
+    useLastProject.setState({ projectId: null, restored: false });
+  });
+
+  it("shows the empty state, with a way to create the first project", async () => {
     mockApi.get.mockResolvedValue([]);
+    const user = userEvent.setup();
 
     await renderWithQueryClient(<ProjectsScreen />);
 
@@ -67,6 +92,10 @@ describe("ProjectsScreen", () => {
     expect(
       screen.getByText("Crea uno para subir tus PDFs y empezar a estudiar."),
     ).toBeOnTheScreen();
+    expect(screen.queryByText("0 proyectos")).toBeNull();
+    await user.press(screen.getByRole("button", { name: "Crear proyecto" }));
+
+    expect(screen.getByLabelText("Nombre")).toBeOnTheScreen();
   });
 
   it("shows the load error and retries", async () => {

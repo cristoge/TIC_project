@@ -1,9 +1,9 @@
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { ActivityIndicator, Alert } from "react-native";
+import { ActivityIndicator, Alert, View } from "react-native";
 
-import { useTheme } from "@/shared/theme";
-import { Button, ErrorState, Screen, Sheet } from "@/shared/ui";
+import { useTheme, useThemedStyles, type Theme } from "@/shared/theme";
+import { AppText, ErrorState, IconButton, Screen, Sheet } from "@/shared/ui";
 
 import {
   useCreateProject,
@@ -13,6 +13,7 @@ import {
   type Project,
 } from "./api";
 import { ProjectForm } from "./components/ProjectForm";
+import { useLastProject } from "./lastProject";
 import { ProjectList } from "./components/ProjectList";
 import { ProjectOptions } from "./components/ProjectOptions";
 import {
@@ -36,6 +37,8 @@ export function ProjectsScreen() {
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
+  const currentId = useLastProject((state) => state.projectId);
+  const styles = useThemedStyles(createStyles);
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [values, setValues] = useState<ProjectFormValues>(formValues());
   const [errors, setErrors] = useState<FormErrors>({});
@@ -99,7 +102,24 @@ export function ProjectsScreen() {
 
   return (
     <Screen>
-      <Button label="Nuevo proyecto" icon="add" onPress={() => openForm({ kind: "create" })} />
+      <View style={styles.header}>
+        <View style={styles.heading}>
+          <AppText variant="title" accessibilityRole="header">
+            Proyectos
+          </AppText>
+          {projects.data?.length ? (
+            <AppText variant="caption" color="textMuted">
+              {projects.data.length === 1 ? "1 proyecto" : `${projects.data.length} proyectos`}
+            </AppText>
+          ) : null}
+        </View>
+        <IconButton
+          icon="add"
+          label="Nuevo proyecto"
+          variant="accent"
+          onPress={() => openForm({ kind: "create" })}
+        />
+      </View>
       {projects.isPending ? (
         <ActivityIndicator color={theme.colors.textMuted} />
       ) : projects.isError ? (
@@ -107,6 +127,8 @@ export function ProjectsScreen() {
       ) : (
         <ProjectList
           projects={projects.data}
+          currentId={currentId}
+          onCreate={() => openForm({ kind: "create" })}
           onOpen={(project) => {
             // Back to the project underneath (opened from its menu), then swap it for this one.
             if (router.canDismiss()) router.dismissAll();
@@ -148,3 +170,12 @@ function sheetTitle(sheet: SheetState | null): string {
 function messageOf(failure: unknown): string {
   return failure instanceof Error ? failure.message : String(failure);
 }
+
+const createStyles = (theme: Theme) => ({
+  header: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+  },
+  heading: { gap: 2 },
+});
