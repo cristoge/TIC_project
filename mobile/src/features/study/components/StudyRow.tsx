@@ -10,23 +10,25 @@ type Props = {
   /** Such as "1 tarjeta" / "3 tarjetas". */
   countLabel: (count: number) => string;
   onOpen: (item: StudyItem) => void;
+  onOptions: (item: StudyItem) => void;
 };
 
-export function StudyRow({ item, countLabel, onOpen }: Props) {
+export function StudyRow({ item, countLabel, onOpen, onOptions }: Props) {
   const styles = useThemedStyles(createStyles);
   const ready = item.status === "ready";
 
   return (
-    <Card>
+    <Card style={styles.card}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ disabled: !ready }}
         disabled={!ready}
         onPress={() => onOpen(item)}
+        onLongPress={item.status === "pending" ? undefined : () => onOptions(item)}
         style={({ pressed }) => [styles.main, pressed && styles.pressed]}
       >
         <AppText variant="label" testID="study-title">
-          {item.topic || "Sin tema"}
+          {item.title}
         </AppText>
         <AppText variant="caption" color="textMuted">
           {ready ? `${countLabel(item.count)} · ${item.documentName}` : item.documentName}
@@ -43,11 +45,33 @@ export function StudyRow({ item, countLabel, onOpen }: Props) {
           </>
         ) : null}
       </Pressable>
+      {/* Hidden while it is being generated: its job still reads the topic and writes its rows. */}
+      {item.status === "pending" ? null : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Opciones de ${item.title}`}
+          hitSlop={8}
+          onPress={() => onOptions(item)}
+          style={({ pressed }) => [styles.options, pressed && styles.pressed]}
+        >
+          <AppText variant="heading" importantForAccessibility="no">
+            ⋯
+          </AppText>
+        </Pressable>
+      )}
     </Card>
   );
 }
 
 const createStyles = (theme: Theme) => ({
-  main: { gap: theme.spacing.xs },
+  card: { flexDirection: "row" as const, alignItems: "center" as const, gap: theme.spacing.sm },
+  main: { flex: 1, gap: theme.spacing.xs },
+  options: {
+    minWidth: 40,
+    minHeight: 40,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    borderRadius: theme.radii.pill,
+  },
   pressed: { opacity: 0.6 },
 });

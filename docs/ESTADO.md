@@ -2,7 +2,7 @@
 
 Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-11-11**. Rama: `migration` (backend y app), subida a GitHub.
 
-> **En una frase:** el backend funciona en local de principio a fin y la app Expo nueva ya tiene **login, proyectos y documentos** probados en el simulador contra ese backend, y el **chat**, todo probado en el simulador; el **estudio** (T7) está escrito y con tests, falta probarlo. **Siguiente: T7, flashcards y tests.**
+> **En una frase:** el backend funciona en local de principio a fin y la app Expo nueva ya tiene **login, proyectos y documentos** probados en el simulador contra ese backend, y el **chat**, todo probado en el simulador; el **estudio** (T7) probado; renombrar y eliminar (T7b) escrito y con tests, falta probarlo. **Siguiente: T7, flashcards y tests.**
 
 ## Lo que está hecho
 
@@ -21,11 +21,11 @@ Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-
 | **App: proyectos** (lista, crear, renombrar, eliminar) | **Probado en el simulador** | `mobile/src/features/projects/` |
 | **App: documentos** (subir PDF ≤ 30 MB, estados, renombrar, eliminar) | **Probado en el simulador** con un PDF de 27 MB y 514 páginas | `mobile/src/features/documents/` |
 | **App: chat** (lista de chats, respuestas en streaming, citas `[n]`, tarjetas de resumen, flashcards y test) | **Probado en el simulador** (T6) | `mobile/src/features/chat/`, `mobile/src/features/study/` |
-| **App: estudio** (mazos y tests del proyecto, crearlos, modo estudio, hacer un test y ver la nota) | Hecho (T7), **sin probar aún en el simulador** | `mobile/src/features/study/` |
+| **App: estudio** (mazos y tests del proyecto, crearlos, modo estudio, hacer un test y ver la nota) | Hecho (T7), probado en el simulador; renombrar y eliminar (T7b) sin probar | `mobile/src/features/study/` |
 | App: ajustes | **Pendiente** (T8) | `odd/tasks/mobile-app.md` |
 | Infraestructura AWS de la app (`infra/app`) | **Aparcada** | — |
 
-Seguimiento tarea a tarea, con las peticiones literales del autor: `odd/tasks/mobile-app.md` (app) y `odd/tasks/aws-migration.md` (backend). La app tiene 202 tests (`cd mobile && npx jest`).
+Seguimiento tarea a tarea, con las peticiones literales del autor: `odd/tasks/mobile-app.md` (app) y `odd/tasks/aws-migration.md` (backend). La app tiene 213 tests (`cd mobile && npx jest`).
 
 ### Datos que hacen falta para arrancar
 
@@ -68,7 +68,7 @@ La API y el agente tienen que escuchar en `0.0.0.0`, no solo en `127.0.0.1`, par
 
 ## Siguiente, en este orden
 
-1. **Probar la T7 en el simulador**: crear un mazo y un test desde la pestaña Estudio, estudiar el mazo, hacer el test y abrir unas flashcards desde el chat.
+1. **Probar renombrar y eliminar** flashcards y tests en la pestaña Estudio, y comprobar que una tarjeta borrada desaparece del chat (T7b).
 2. **T8 — Ajustes**: nombre, tema y **cerrar sesión** (ahora mismo no hay forma de salir).
 3. **Limpieza de tipado del backend** (aplazada): basedpyright marca 1 error y 119 avisos en `backend/entrypoints/api/app.py`, sin fallos de comportamiento (detalle en el historial de git de este documento, versión del 2026-11-10 por la mañana).
 

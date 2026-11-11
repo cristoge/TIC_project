@@ -71,7 +71,10 @@ export type StudyKind = "decks" | "quizzes";
 
 export type StudyItem = {
   id: string;
+  documentId: string;
   topic: string | null;
+  /** The topic, or "Flashcards 2" / "Test 2" when it has none. */
+  title: string;
   /** Cards or questions it holds once ready. */
   count: number;
   status: Generated["status"];
@@ -116,7 +119,9 @@ export function useProjectStudy(projectId: string, kind: StudyKind) {
     .flatMap((list, index) =>
       (list.data ?? []).map((item) => ({
         id: item.id,
-        topic: item.topic,
+        documentId: item.document_id,
+        topic: item.topic?.trim() || null,
+        title: "",
         count: "cards" in item ? item.cards.length : item.questions.length,
         status: item.status,
         error_message: item.error_message,
@@ -125,6 +130,7 @@ export function useProjectStudy(projectId: string, kind: StudyKind) {
       })),
     )
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  numberUntitled(items, UNTITLED[kind]);
   const failed = lists.filter((list) => list.isError);
 
   return {
@@ -139,6 +145,14 @@ export function useProjectStudy(projectId: string, kind: StudyKind) {
   };
 }
 
+const UNTITLED: Record<StudyKind, string> = { decks: "Flashcards", quizzes: "Test" };
+
+/** Untitled items are numbered by creation, the oldest being 1; `items` is newest first. */
+function numberUntitled(items: StudyItem[], label: string) {
+  let number = items.filter((item) => !item.topic).length;
+  for (const item of items) item.title = item.topic ?? `${label} ${number--}`;
+}
+
 export type NewStudyItem = { documentId: string; count: number; topic: string | null };
 
 export function useCreateStudyItem(kind: StudyKind) {
@@ -149,5 +163,44 @@ export function useCreateStudyItem(kind: StudyKind) {
     // Returning the promise keeps the mutation pending until the list has been refetched.
     onSuccess: (_created, { documentId }) =>
       queryClient.invalidateQueries({ queryKey: listKeys[kind](documentId) }),
+  });
+}
+
+const itemPaths: Record<StudyKind, (id: string) => string> = {
+  decks: (id) => `/flashcard-decks/${id}`,
+  quizzes: (id) => `/quizzes/${id}`,
+};
+
+const itemKeys: Record<StudyKind, (id: string) => readonly string[]> = {
+  decks: studyKeys.deck,
+  quizzes: studyKeys.quiz,
+};
+
+/** After a change, refetch the item's list, the item itself and the chats, whose cards link to it. */
+function useRefreshAfterEdit(kind: StudyKind) {
+  const queryClient = useQueryClient();
+  return (item: Pick<StudyItem, "id" | "documentId">) =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: listKeys[kind](item.documentId) }),
+      queryClient.invalidateQueries({ queryKey: itemKeys[kind](item.id) }),
+      // Chat messages live under ["conversations", id, "messages"]; a deleted item's link becomes null.
+      queryClient.invalidateQueries({ queryKey: ["conversations"] }),
+    ]);
+}
+
+export function useRenameStudyItem(kind: StudyKind) {
+  const refresh = useRefreshAfterEdit(kind);
+  return useMutation({
+    mutationFn: ({ item, topic }: { item: StudyItem; topic: string | null }) =>
+      getApi().patch<Deck | Quiz>(itemPaths[kind](item.id), { topic }),
+    onSuccess: (_renamed, { item }) => refresh(item),
+  });
+}
+
+export function useDeleteStudyItem(kind: StudyKind) {
+  const refresh = useRefreshAfterEdit(kind);
+  return useMutation({
+    mutationFn: (item: StudyItem) => getApi().delete(itemPaths[kind](item.id)),
+    onSuccess: (_deleted, item) => refresh(item),
   });
 }

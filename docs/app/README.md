@@ -41,7 +41,7 @@ Ajustes: nombre (perfil), tema claro/oscuro, cerrar sesión
 ```
 
 - **Todo cuelga del proyecto**: el backend no tiene chats sin proyecto ni listas globales.
-- **Estudio del proyecto**: la API da los mazos y los tests por documento (`GET /documents/{id}/flashcard-decks` y `/quizzes`), así que la pestaña junta los de cada documento listo. Si llega a pesar, se añaden listas por proyecto al backend. Se crean desde la propia pestaña (documento, tema opcional y de 1 a 30) o desde el chat; no se pueden borrar porque la API no lo permite.
+- **Estudio del proyecto**: la API da los mazos y los tests por documento (`GET /documents/{id}/flashcard-decks` y `/quizzes`), así que la pestaña junta los de cada documento listo. Si llega a pesar, se añaden listas por proyecto al backend. Se crean desde la propia pestaña (documento, tema opcional y de 1 a 30) o desde el chat. Se pueden renombrar (sin nombre se numeran: «Flashcards 1», «Test 1»…) y eliminar, salvo mientras se generan; al eliminarlos, su tarjeta desaparece del chat donde se crearon.
 - **Resumen, flashcards y test también se crean desde el chat**: el agente tiene las herramientas `create_summary`, `create_flashcards` y `create_quiz`, y la app los muestra como tarjetas.
 
 ## Estética

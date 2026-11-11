@@ -1,4 +1,5 @@
 import { act, screen, userEvent, waitFor } from "@testing-library/react-native";
+import { Alert, type AlertButton } from "react-native";
 
 import { aDocument } from "@/features/documents/testing/documents";
 import { ApiError } from "@/shared/api";
@@ -64,13 +65,33 @@ describe("StudySection", () => {
   it("lists the decks of every ready document, newest first", async () => {
     await renderWithQueryClient(<StudySection projectId="p1" />);
 
-    expect(await screen.findByText("Sin tema")).toBeOnTheScreen();
+    expect(await screen.findByText("Flashcards 1")).toBeOnTheScreen();
     expect(screen.getByText("1 tarjeta · Tema 2.pdf")).toBeOnTheScreen();
     expect(screen.getByText("Grafos")).toBeOnTheScreen();
     expect(screen.getByText("2 tarjetas · Tema 1.pdf")).toBeOnTheScreen();
     const titles = screen.getAllByTestId("study-title").map((title) => title.props.children);
-    expect(titles).toEqual(["Sin tema", "Grafos"]);
+    expect(titles).toEqual(["Flashcards 1", "Grafos"]);
     expect(mockApi.get).not.toHaveBeenCalledWith("/documents/d3/flashcard-decks");
+  });
+
+  it("numbers the ones without a name, oldest first", async () => {
+    const first = aDeck({ id: "f5", topic: null, created_at: "2026-10-01T10:00:00Z" });
+    serve({ ...server, "/documents/d1/flashcard-decks": [older, first] });
+    await renderWithQueryClient(<StudySection projectId="p1" />);
+
+    await screen.findByText("Grafos");
+    const titles = screen.getAllByTestId("study-title").map((title) => title.props.children);
+    expect(titles).toEqual(["Flashcards 2", "Grafos", "Flashcards 1"]);
+  });
+
+  it("numbers quizzes as tests", async () => {
+    serve({ ...server, "/documents/d1/quizzes": [aQuiz({ id: "q1", topic: "  " })] });
+    const user = userEvent.setup();
+    await renderWithQueryClient(<StudySection projectId="p1" />);
+
+    await user.press(screen.getByRole("tab", { name: "Tests" }));
+
+    expect(await screen.findByText("Test 1")).toBeOnTheScreen();
   });
 
   it("lists the quizzes in their own section", async () => {
@@ -195,6 +216,133 @@ describe("StudySection", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("The document is not ready.");
     expect(screen.getByLabelText("Número de tarjetas")).toBeOnTheScreen();
+  });
+
+  describe("renaming and deleting", () => {
+    function pressAlertButton(text: string) {
+      const buttons = jest.mocked(Alert.alert).mock.calls[0][2] as AlertButton[];
+      buttons.find((button) => button.text === text)?.onPress?.();
+    }
+
+    async function openOptions(title: string) {
+      const user = userEvent.setup();
+      await user.press(await screen.findByRole("button", { name: `Opciones de ${title}` }));
+      return user;
+    }
+
+    it("renames a deck", async () => {
+      mockApi.patch.mockResolvedValue({ ...older, topic: "Árboles" });
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+      const user = await openOptions("Grafos");
+
+      await user.press(screen.getByRole("button", { name: "Renombrar" }));
+      expect(screen.getByLabelText("Nombre")).toHaveDisplayValue("Grafos");
+      await user.clear(screen.getByLabelText("Nombre"));
+      await user.type(screen.getByLabelText("Nombre"), "Árboles");
+      serve({ ...server, "/documents/d1/flashcard-decks": [{ ...older, topic: "Árboles" }] });
+      await user.press(screen.getByRole("button", { name: "Guardar" }));
+
+      expect(await screen.findByText("Árboles")).toBeOnTheScreen();
+      expect(mockApi.patch).toHaveBeenCalledWith("/flashcard-decks/f1", { topic: "Árboles" });
+      expect(screen.queryByLabelText("Nombre")).toBeNull();
+    });
+
+    it("clears a quiz's name so it is numbered again", async () => {
+      mockApi.patch.mockResolvedValue({ ...quiz, topic: null });
+      const user = userEvent.setup();
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+      await user.press(screen.getByRole("tab", { name: "Tests" }));
+      await openOptions("Repaso");
+
+      await user.press(screen.getByRole("button", { name: "Renombrar" }));
+      await user.clear(screen.getByLabelText("Nombre"));
+      serve({ ...server, "/documents/d1/quizzes": [{ ...quiz, topic: null }] });
+      await user.press(screen.getByRole("button", { name: "Guardar" }));
+
+      expect(await screen.findByText("Test 1")).toBeOnTheScreen();
+      expect(mockApi.patch).toHaveBeenCalledWith("/quizzes/q1", { topic: null });
+    });
+
+    it("shows a failed rename in the form", async () => {
+      mockApi.patch.mockRejectedValue(new ApiError(409, "It is still being generated."));
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+      const user = await openOptions("Grafos");
+
+      await user.press(screen.getByRole("button", { name: "Renombrar" }));
+      await user.press(screen.getByRole("button", { name: "Guardar" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("It is still being generated.");
+    });
+
+    it("deletes a deck after confirming", async () => {
+      jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      mockApi.delete.mockResolvedValue(undefined);
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+      const user = await openOptions("Grafos");
+
+      await user.press(screen.getByRole("button", { name: "Eliminar" }));
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "¿Eliminar estas flashcards?",
+        "También desaparecerán del chat donde se crearon.",
+        expect.any(Array),
+        expect.anything(),
+      );
+      expect(mockApi.delete).not.toHaveBeenCalled();
+      serve({ ...server, "/documents/d1/flashcard-decks": [] });
+      pressAlertButton("Eliminar");
+
+      await waitFor(() => expect(screen.queryByText("Grafos")).toBeNull());
+      expect(mockApi.delete).toHaveBeenCalledWith("/flashcard-decks/f1");
+    });
+
+    it("deletes a quiz after confirming", async () => {
+      jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      mockApi.delete.mockResolvedValue(undefined);
+      const user = userEvent.setup();
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+      await user.press(screen.getByRole("tab", { name: "Tests" }));
+      await openOptions("Repaso");
+
+      await user.press(screen.getByRole("button", { name: "Eliminar" }));
+      expect(jest.mocked(Alert.alert).mock.calls[0][0]).toBe("¿Eliminar este test?");
+      pressAlertButton("Eliminar");
+
+      await waitFor(() => expect(mockApi.delete).toHaveBeenCalledWith("/quizzes/q1"));
+    });
+
+    it("keeps it when the deletion is cancelled", async () => {
+      jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+      const user = await openOptions("Grafos");
+
+      await user.press(screen.getByRole("button", { name: "Eliminar" }));
+      pressAlertButton("Cancelar");
+
+      expect(mockApi.delete).not.toHaveBeenCalled();
+    });
+
+    it("shows a failed deletion", async () => {
+      const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      mockApi.delete.mockRejectedValue(new Error("Network request failed"));
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+      const user = await openOptions("Grafos");
+
+      await user.press(screen.getByRole("button", { name: "Eliminar" }));
+      pressAlertButton("Eliminar");
+
+      await waitFor(() =>
+        expect(alert).toHaveBeenLastCalledWith("No se pudo eliminar", "Network request failed"),
+      );
+    });
+
+    it("offers no options while it is being generated", async () => {
+      serve({ ...server, "/documents/d1/flashcard-decks": [generating] });
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+
+      await screen.findByText("Caminos");
+      expect(screen.queryByRole("button", { name: "Opciones de Caminos" })).toBeNull();
+      expect(screen.getByRole("button", { name: "Opciones de Flashcards 1" })).toBeOnTheScreen();
+    });
   });
 
   it("shows a failed load with a way to retry", async () => {
