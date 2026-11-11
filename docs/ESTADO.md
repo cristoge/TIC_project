@@ -67,7 +67,7 @@ La API y el agente tienen que escuchar en `0.0.0.0`, no solo en `127.0.0.1`, par
 
 ## Siguiente, en este orden
 
-1. **T7 — Flashcards y tests**: apartado de flashcards del proyecto, modo estudio, hacer un test y ver el resultado. Las tarjetas del chat ya existen (`ArtifactCard`); falta darles destino (`onOpenArtifact` en la ruta del chat) para que salgan «Estudiar» y «Hacer test».
+1. **T7 — Flashcards y tests** (planeada con el autor el 2026-11-11; detalle en `odd/tasks/mobile-app.md`, L18): apartado de flashcards del proyecto, modo estudio, hacer un test y ver el resultado. Las tarjetas del chat ya existen (`ArtifactCard`); falta darles destino (`onOpenArtifact` en la ruta del chat) para que salgan «Estudiar» y «Hacer test».
 2. **T8 — Ajustes**: nombre, tema y **cerrar sesión** (ahora mismo no hay forma de salir).
 3. **Limpieza de tipado del backend** (aplazada): basedpyright marca 1 error y 119 avisos en `backend/entrypoints/api/app.py`, sin fallos de comportamiento (detalle en el historial de git de este documento, versión del 2026-11-10 por la mañana).
 
