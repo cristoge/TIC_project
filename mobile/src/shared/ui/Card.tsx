@@ -8,9 +8,12 @@ export function Card({ style, ...props }: ViewProps) {
 }
 
 const createStyles = (theme: Theme) => ({
+  // A thin border on the background instead of a coloured block.
   card: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.background,
     borderRadius: theme.radii.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     padding: theme.spacing.lg,
     gap: theme.spacing.sm,
   },

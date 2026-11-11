@@ -16,7 +16,7 @@ export function Badge({ label, tone }: Props) {
   const styles = useThemedStyles(createStyles);
   return (
     <View style={[styles.badge, styles[tone]]}>
-      <AppText variant="caption" color={tone === "danger" ? "danger" : "onAccent"}>
+      <AppText variant="caption" color={tone === "danger" ? "danger" : "text"}>
         {label}
       </AppText>
     </View>
@@ -30,7 +30,6 @@ const createStyles = (theme: Theme) => ({
     paddingVertical: 2,
     borderRadius: theme.radii.pill,
   },
-  // accentSoft is the support tone for progress; the accent itself stays reserved for actions.
   progress: { backgroundColor: theme.colors.accentSoft },
   danger: { borderWidth: 1, borderColor: theme.colors.danger },
 });

@@ -18,6 +18,8 @@ const readablePairs: [ColorName, ColorName][] = [
   ["textMuted", "background"],
   ["textMuted", "surface"],
   ["onAccent", "accent"],
+  ["text", "accentSoft"],
+  ["accent", "background"],
   ["danger", "background"],
 ];
 
@@ -28,7 +30,20 @@ describe.each(["light", "dark"] as const)("%s colors", (scheme) => {
     );
   });
 
-  it("uses the brand orange as the accent", () => {
-    expect(colors[scheme].accent).toBe("#FF6400");
+  it("uses a cobalt blue as the accent", () => {
+    const [r, g, b] = [1, 3, 5].map((start) =>
+      parseInt(colors[scheme].accent.slice(start, start + 2), 16),
+    );
+    expect(b).toBeGreaterThan(r + 100);
+    expect(b).toBeGreaterThan(g + 60);
+  });
+
+  it("keeps the background and surface neutral", () => {
+    for (const name of ["background", "surface"] as const) {
+      const [r, g, b] = [1, 3, 5].map((start) =>
+        parseInt(colors[scheme][name].slice(start, start + 2), 16),
+      );
+      expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThanOrEqual(16);
+    }
   });
 });

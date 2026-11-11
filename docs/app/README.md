@@ -46,20 +46,21 @@ Ajustes: nombre (perfil), tema sistema/claro/oscuro (se guarda en el móvil), ce
 
 ## Estética
 
-Inspirada en la web de Donkey Republic (valores sacados de su CSS): un único color fuerte que guía la vista, fondos cálidos y mucho aire.
+Sobria y profesional (rediseño del 2026-11-11, `odd/tasks/mobile-redesign.md`): fondos blancos y grises neutros, bordes finos en vez de bloques de color, un único acento azul cobalto y mucho aire.
 
-| Token | Claro | Oscuro (propuesta) | Uso |
+| Token | Claro | Oscuro | Uso |
 |---|---|---|---|
-| `accent` | `#FF6400` | `#FF6400` | **Solo acciones**: enviar, subir, estudiar, empezar test |
-| `onAccent` | `#1E1814` | `#1E1814` | Texto sobre el acento |
-| `accentSoft` | `#FAAD45` | `#FAAD45` | Apoyo: insignias, progreso |
-| `background` | `#F6F4F1` | `#1E1814` | Fondo de pantalla |
-| `surface` | `#FFF2EA` | `#2A231E` | Tarjetas, burbujas |
-| `text` | `#1E1814` | `#F6F4F1` | Texto principal |
+| `accent` | `#0047AB` | `#6E97F2` | Acción principal de cada pantalla, enlaces y selección actual |
+| `onAccent` | `#FFFFFF` | `#0E1116` | Texto sobre el acento |
+| `accentSoft` | `#E6EEF9` | `#1B2840` | Insignias y entrada seleccionada del menú |
+| `background` | `#FFFFFF` | `#0E1116` | Fondo de pantalla, tarjetas y campos |
+| `surface` | `#F6F7F9` | `#171B22` | Menú lateral, burbujas propias, fondo de los selectores |
+| `border` | `#E5E7EB` | `#2A303A` | Bordes y separadores |
+| `text` / `textMuted` | `#111827` / `#4B5563` | `#F3F4F6` / `#A1A8B3` | Texto principal y de apoyo |
 
-- **Contraste**: texto blanco sobre `#FF6400` da ~3:1, por debajo del 4,5:1 de WCAG AA. Sobre el acento va texto oscuro (`#1E1814`, ~6:1).
-- **Tipografía**: **Geist** para todo. Títulos grandes y en negrita; texto de apoyo corto.
-- **Formas**: radios de 8 a 24 px, tarjetas suaves y sin bordes duros.
+- **Contraste**: todos los pares de texto y fondo cumplen WCAG AA (4,5:1), comprobado en `tokens.test.ts`. En oscuro, ningún azul se lee como texto sobre el fondo y a la vez lleva texto blanco encima, así que el texto sobre el acento es oscuro.
+- **Tipografía**: **Geist**, con títulos de 24 px en seminegrita y texto de 16 px.
+- **Formas**: radios de 6 a 16 px, botones de 44 px de alto.
 
 ## Estructura del código
 

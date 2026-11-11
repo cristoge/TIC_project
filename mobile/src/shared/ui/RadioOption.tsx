@@ -29,16 +29,15 @@ export function RadioOption({ label, checked, onPress }: Props) {
 
 const createStyles = (theme: Theme) => ({
   option: {
-    minHeight: 48,
+    minHeight: 44,
     justifyContent: "center" as const,
-    paddingHorizontal: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.radii.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.background,
   },
-  // A heavier text-coloured border: the accent stays reserved for actions.
-  checked: { borderColor: theme.colors.text, borderWidth: 2 },
+  checked: { borderColor: theme.colors.accent, backgroundColor: theme.colors.accentSoft },
   pressed: { opacity: 0.85 },
 });

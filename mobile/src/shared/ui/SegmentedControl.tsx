@@ -46,19 +46,22 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
 const createStyles = (theme: Theme) => ({
   track: {
     flexDirection: "row" as const,
-    padding: theme.spacing.xs,
-    gap: theme.spacing.xs,
+    padding: 2,
+    gap: 2,
     borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   segment: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 36,
     alignItems: "center" as const,
     justifyContent: "center" as const,
     borderRadius: theme.radii.sm,
   },
-  selected: { backgroundColor: theme.colors.surface },
+  selected: {
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
   pressed: { opacity: 0.6 },
 });

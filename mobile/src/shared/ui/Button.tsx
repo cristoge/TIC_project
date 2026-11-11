@@ -46,22 +46,26 @@ export function Button({ label, onPress, variant = "primary", disabled, loading 
 
 const createStyles = (theme: Theme) => ({
   base: {
-    minHeight: 48,
-    paddingHorizontal: theme.spacing.xl,
+    minHeight: 44,
+    paddingHorizontal: theme.spacing.lg,
     borderRadius: theme.radii.md,
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   primary: { backgroundColor: theme.colors.accent },
   secondary: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
-  danger: { backgroundColor: "transparent", borderWidth: 1, borderColor: theme.colors.danger },
+  danger: {
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
   primaryText: { color: theme.colors.onAccent },
   secondaryText: { color: theme.colors.text },
   dangerText: { color: theme.colors.danger },
-  pressed: { opacity: 0.85 },
-  disabled: { opacity: 0.5 },
+  pressed: { opacity: 0.8 },
+  disabled: { opacity: 0.4 },
 });

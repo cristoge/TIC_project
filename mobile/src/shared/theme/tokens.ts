@@ -2,26 +2,30 @@
 
 export const colors = {
   light: {
-    background: "#F6F4F1",
-    surface: "#FFF2EA",
-    text: "#1E1814",
-    textMuted: "#6B5843",
-    border: "#E7DED6",
-    // Only for actions. White on it fails WCAG AA, so text on the accent is always dark.
-    accent: "#FF6400",
-    onAccent: "#1E1814",
-    accentSoft: "#FAAD45",
+    background: "#FFFFFF",
+    // Grouped content, inputs and the side menu sit one step off the background.
+    surface: "#F6F7F9",
+    text: "#111827",
+    textMuted: "#4B5563",
+    border: "#E5E7EB",
+    // Cobalt blue for the main action of a screen, links and the current selection.
+    accent: "#0047AB",
+    onAccent: "#FFFFFF",
+    // Tinted background for badges and the selected menu entry.
+    accentSoft: "#E6EEF9",
     danger: "#B42318",
   },
   dark: {
-    background: "#1E1814",
-    surface: "#2A231E",
-    text: "#F6F4F1",
-    textMuted: "#B8ADA3",
-    border: "#3D342E",
-    accent: "#FF6400",
-    onAccent: "#1E1814",
-    accentSoft: "#FAAD45",
+    background: "#0E1116",
+    surface: "#171B22",
+    text: "#F3F4F6",
+    textMuted: "#A1A8B3",
+    border: "#2A303A",
+    // A lighter cobalt so it reads as text on the dark background. No blue does that and also
+    // carries white text at AA, so text on it is dark here.
+    accent: "#6E97F2",
+    onAccent: "#0E1116",
+    accentSoft: "#1B2840",
     danger: "#F97066",
   },
 } as const;
@@ -40,10 +44,10 @@ export const spacing = {
 } as const;
 
 export const radii = {
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  sm: 6,
+  md: 8,
+  lg: 12,
+  xl: 16,
   pill: 999,
 } as const;
 
@@ -56,10 +60,10 @@ export const fonts = {
 } as const;
 
 export const typography = {
-  title: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 34 },
-  heading: { fontFamily: fonts.semibold, fontSize: 20, lineHeight: 26 },
+  title: { fontFamily: fonts.semibold, fontSize: 24, lineHeight: 30, letterSpacing: -0.3 },
+  heading: { fontFamily: fonts.semibold, fontSize: 17, lineHeight: 22 },
   body: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 24 },
-  label: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 20 },
+  label: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 20 },
   caption: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 18 },
 } as const;
 
