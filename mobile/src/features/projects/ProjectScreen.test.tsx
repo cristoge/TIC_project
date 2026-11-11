@@ -22,7 +22,7 @@ describe("ProjectScreen", () => {
     expect(screen.getAllByRole("tab").map((tab) => tab.props.accessibilityLabel)).toEqual([
       "Chats",
       "Documentos",
-      "Flashcards",
+      "Estudio",
     ]);
     expect(screen.getByRole("tab", { name: "Documentos" })).toBeSelected();
     expect(await screen.findByText("Aún no hay documentos")).toBeOnTheScreen();
@@ -40,8 +40,8 @@ describe("ProjectScreen", () => {
     expect(screen.getByRole("tab", { name: "Chats" })).toBeSelected();
     expect(screen.queryByText("Aún no hay documentos")).not.toBeOnTheScreen();
 
-    await user.press(screen.getByRole("tab", { name: "Flashcards" }));
-    expect(screen.getByText("Las flashcards llegarán pronto.")).toBeOnTheScreen();
+    await user.press(screen.getByRole("tab", { name: "Estudio" }));
+    expect(await screen.findByText("Aún no hay flashcards")).toBeOnTheScreen();
     expect(screen.queryByText("Aún no hay chats")).not.toBeOnTheScreen();
 
     await user.press(screen.getByRole("tab", { name: "Documentos" }));

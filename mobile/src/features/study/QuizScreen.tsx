@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, Button, Screen } from "@/shared/ui";
+import { AppText, Button, RadioOption, Screen } from "@/shared/ui";
 
 import { useGradeQuiz, useQuiz, type Answers } from "./api";
 import { GenerationState } from "./components/GenerationState";
@@ -64,25 +64,14 @@ export function QuizScreen({ quizId }: Props) {
           </AppText>
           <AppText variant="heading">{question.question}</AppText>
           <View accessibilityRole="radiogroup" style={styles.options}>
-            {question.options.map((option, optionIndex) => {
-              const checked = answers[question.id] === optionIndex;
-              return (
-                <Pressable
-                  key={optionIndex}
-                  accessibilityRole="radio"
-                  accessibilityLabel={option}
-                  accessibilityState={{ checked }}
-                  onPress={() => setAnswers({ ...answers, [question.id]: optionIndex })}
-                  style={({ pressed }) => [
-                    styles.option,
-                    checked && styles.checked,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <AppText>{option}</AppText>
-                </Pressable>
-              );
-            })}
+            {question.options.map((option, optionIndex) => (
+              <RadioOption
+                key={optionIndex}
+                label={option}
+                checked={answers[question.id] === optionIndex}
+                onPress={() => setAnswers({ ...answers, [question.id]: optionIndex })}
+              />
+            ))}
           </View>
           {grade.error ? (
             <AppText color="danger" accessibilityRole="alert">
@@ -116,19 +105,6 @@ export function QuizScreen({ quizId }: Props) {
 const createStyles = (theme: Theme) => ({
   scroll: { padding: theme.spacing.lg, backgroundColor: theme.colors.background },
   options: { gap: theme.spacing.sm },
-  option: {
-    minHeight: 48,
-    justifyContent: "center" as const,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-  },
-  // A heavier text-coloured border: the accent stays reserved for actions.
-  checked: { borderColor: theme.colors.text, borderWidth: 2 },
-  pressed: { opacity: 0.85 },
   actions: { flexDirection: "row" as const, gap: theme.spacing.sm, marginTop: "auto" as const },
   action: { flex: 1 },
 });

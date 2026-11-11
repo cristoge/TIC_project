@@ -2,14 +2,15 @@ import { useState } from "react";
 
 import { ChatsSection } from "@/features/chat";
 import { DocumentsSection } from "@/features/documents";
-import { AppText, Screen, SegmentedControl } from "@/shared/ui";
+import { StudySection } from "@/features/study";
+import { Screen, SegmentedControl } from "@/shared/ui";
 
-type Section = "chats" | "documents" | "flashcards";
+type Section = "chats" | "documents" | "study";
 
 const SECTIONS = [
   { value: "chats", label: "Chats" },
   { value: "documents", label: "Documentos" },
-  { value: "flashcards", label: "Flashcards" },
+  { value: "study", label: "Estudio" },
 ] as const;
 
 type Props = { projectId: string };
@@ -26,7 +27,7 @@ export function ProjectScreen({ projectId }: Props) {
       ) : section === "chats" ? (
         <ChatsSection projectId={projectId} />
       ) : (
-        <AppText color="textMuted">Las flashcards llegarán pronto.</AppText>
+        <StudySection projectId={projectId} />
       )}
     </Screen>
   );

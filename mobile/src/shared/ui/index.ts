@@ -4,6 +4,7 @@ export * from "./Button";
 export * from "./Card";
 export * from "./EmptyState";
 export * from "./ErrorState";
+export * from "./RadioOption";
 export * from "./Screen";
 export * from "./SegmentedControl";
 export * from "./Sheet";
