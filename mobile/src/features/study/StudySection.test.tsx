@@ -76,7 +76,7 @@ describe("StudySection", () => {
   it("lists the quizzes in their own section", async () => {
     const user = userEvent.setup();
     await renderWithQueryClient(<StudySection projectId="p1" />);
-    expect(screen.getByRole("tab", { name: "Mazos" })).toBeSelected();
+    expect(screen.getByRole("tab", { name: "Flashcards" })).toBeSelected();
 
     await user.press(screen.getByRole("tab", { name: "Tests" }));
 

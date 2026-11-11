@@ -34,8 +34,8 @@ Login
       │              ├─ Flashcards → "Estudiar"
       │              └─ Test       → "Hacer test" → resultado
       ├─ Documentos  lista + subir PDF (procesando / listo / error)
-      └─ Estudio     [ Mazos | Tests ] de todos los documentos + crear
-                     ├─ Mazo → dar la vuelta a cada tarjeta
+      └─ Estudio     [ Flashcards | Tests ] de todos los documentos + crear
+                     ├─ Flashcards → dar la vuelta a cada tarjeta
                      └─ Test → una pregunta cada vez → nota y explicaciones
 Ajustes: nombre (perfil), tema claro/oscuro, cerrar sesión
 ```

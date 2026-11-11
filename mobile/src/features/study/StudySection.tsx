@@ -11,7 +11,7 @@ import { StudyRow } from "./components/StudyRow";
 import { countError, formValues, toNewItem, type StudyFormValues } from "./studyForm";
 
 const KINDS = [
-  { value: "decks", label: "Mazos" },
+  { value: "decks", label: "Flashcards" },
   { value: "quizzes", label: "Tests" },
 ] as const;
 
