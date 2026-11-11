@@ -99,7 +99,7 @@ export function ProjectsScreen() {
 
   return (
     <Screen>
-      <Button label="Nuevo proyecto" onPress={() => openForm({ kind: "create" })} />
+      <Button label="Nuevo proyecto" icon="add" onPress={() => openForm({ kind: "create" })} />
       {projects.isPending ? (
         <ActivityIndicator color={theme.colors.textMuted} />
       ) : projects.isError ? (

@@ -1,7 +1,7 @@
 import { Pressable } from "react-native";
 
 import { useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, Card } from "@/shared/ui";
+import { AppText, Card, IconButton } from "@/shared/ui";
 
 import type { Project } from "../api";
 
@@ -29,18 +29,11 @@ export function ProjectRow({ project, onOpen, onOptions }: Props) {
           </AppText>
         ) : null}
       </Pressable>
-      {/* A visible sibling (not nested) so screen readers and users unaware of long-press reach it. */}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Opciones de ${project.name}`}
-        hitSlop={8}
+      <IconButton
+        icon="options"
+        label={`Opciones de ${project.name}`}
         onPress={() => onOptions(project)}
-        style={({ pressed }) => [styles.options, pressed && styles.pressed]}
-      >
-        <AppText variant="heading" importantForAccessibility="no">
-          ⋯
-        </AppText>
-      </Pressable>
+      />
     </Card>
   );
 }
@@ -48,12 +41,5 @@ export function ProjectRow({ project, onOpen, onOptions }: Props) {
 const createStyles = (theme: Theme) => ({
   card: { flexDirection: "row" as const, alignItems: "center" as const, gap: theme.spacing.sm },
   main: { flex: 1, gap: theme.spacing.xs },
-  options: {
-    minWidth: 40,
-    minHeight: 40,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    borderRadius: theme.radii.pill,
-  },
   pressed: { opacity: 0.6 },
 });

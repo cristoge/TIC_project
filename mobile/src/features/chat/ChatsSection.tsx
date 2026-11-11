@@ -38,7 +38,11 @@ export function ChatsSection({ projectId }: Props) {
   return (
     <View style={styles.section}>
       {/* The conversation is created by its first message, so an unused chat leaves nothing behind. */}
-      <Button label="Nuevo chat" onPress={() => router.push(`/projects/${projectId}/chats/new`)} />
+      <Button
+        label="Nuevo chat"
+        icon="newChat"
+        onPress={() => router.push(`/projects/${projectId}/chats/new`)}
+      />
       {conversations.isPending ? (
         <ActivityIndicator color={theme.colors.textMuted} />
       ) : conversations.isError ? (

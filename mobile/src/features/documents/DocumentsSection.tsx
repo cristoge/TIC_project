@@ -101,7 +101,7 @@ export function DocumentsSection({ projectId }: Props) {
 
   return (
     <View style={styles.section}>
-      <Button label="Subir PDF" onPress={upload} loading={uploadDocument.isPending} />
+      <Button label="Subir PDF" icon="upload" onPress={upload} loading={uploadDocument.isPending} />
       {uploadDocument.error ? (
         <AppText color="danger" accessibilityRole="alert">
           {uploadDocument.error.message}

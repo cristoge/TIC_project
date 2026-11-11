@@ -1,7 +1,7 @@
 import { Pressable } from "react-native";
 
 import { useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, Badge, Card } from "@/shared/ui";
+import { AppText, Badge, Card, IconButton } from "@/shared/ui";
 
 import type { StudyItem } from "../api";
 
@@ -47,17 +47,11 @@ export function StudyRow({ item, countLabel, onOpen, onOptions }: Props) {
       </Pressable>
       {/* Hidden while it is being generated: its job still reads the topic and writes its rows. */}
       {item.status === "pending" ? null : (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Opciones de ${item.title}`}
-          hitSlop={8}
+        <IconButton
+          icon="options"
+          label={`Opciones de ${item.title}`}
           onPress={() => onOptions(item)}
-          style={({ pressed }) => [styles.options, pressed && styles.pressed]}
-        >
-          <AppText variant="heading" importantForAccessibility="no">
-            ⋯
-          </AppText>
-        </Pressable>
+        />
       )}
     </Card>
   );
@@ -66,12 +60,5 @@ export function StudyRow({ item, countLabel, onOpen, onOptions }: Props) {
 const createStyles = (theme: Theme) => ({
   card: { flexDirection: "row" as const, alignItems: "center" as const, gap: theme.spacing.sm },
   main: { flex: 1, gap: theme.spacing.xs },
-  options: {
-    minWidth: 40,
-    minHeight: 40,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    borderRadius: theme.radii.pill,
-  },
   pressed: { opacity: 0.6 },
 });

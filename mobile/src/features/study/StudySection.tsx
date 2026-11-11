@@ -155,7 +155,12 @@ export function StudySection({ projectId }: Props) {
   return (
     <View style={styles.section}>
       <SegmentedControl options={KINDS} value={kind} onChange={setKind} />
-      <Button label={text.create} onPress={openForm} disabled={study.isPending || !canCreate} />
+      <Button
+        label={text.create}
+        icon="add"
+        onPress={openForm}
+        disabled={study.isPending || !canCreate}
+      />
       {!study.isPending && !canCreate ? (
         <AppText variant="caption" color="textMuted">
           Sube un PDF primero.

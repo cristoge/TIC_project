@@ -15,8 +15,8 @@ Branch: `migration` (work-unit commits directly on it) · Delivery: direct commi
 
 | ID | Specs | Task | Route | Status | Evidence |
 |----|-------|------|-------|--------|----------|
-| R1 | S1, S2 | Cobalt palette and new tokens (light/dark), restyled atoms | inline | done | this commit; RED 5 token tests (cobalt accent, neutral surfaces, new pairs); GREEN 238 tests |
-| R2 | S3 | `Icon` atom on SF Symbols; icons in rows, composer, headers | inline | pending | |
+| R1 | S1, S2 | Cobalt palette and new tokens (light/dark), restyled atoms | inline | done | `250ad2d`; RED 5 token tests (cobalt accent, neutral surfaces, new pairs); GREEN 238 tests |
+| R2 | S3 | `Icon` atom on SF Symbols; icons in rows, composer, headers | inline | done | this commit; RED `Cannot find module './Icon'`; GREEN 241 tests |
 | R3 | S4, S5 | Drawer per project with custom content, routes moved under it, last project remembered | inline | pending | |
 | R4 | S1 | Screen polish (lists with separators, chat bubbles, study, settings) and docs | inline | pending | |
 
@@ -26,3 +26,4 @@ Route evidence: no Writer trigger (each unit depends on the previous one's token
 
 - **L1** (2026-11-11) — User: "vale hecha la funcionalidad quieor cambiar la estetica de la pagina por una estetica mas profesional,". Asked whether to keep the orange; user: "no, el color de acento mas tipo azul cobalto, iconos, chats documentos y estudio de esa forma lo veo muy feo, la ocsa seria un menu a la izquierda como tiene la app de claude mejoralo todo para que quede mas profesional". Checked: `expo-router/drawer` and its `react-native-drawer-layout` are already installed, as is `expo-symbols`, so no new dependency. Asked where the app should open; user: "que dirias tu?"; recommended the last used project on a new chat, falling back to the projects list. This supersedes S3 (look) and the tabs and header button of S5 in `odd/tasks/mobile-app.md`.
 - **L2** (2026-11-11) — R1: light `#FFFFFF`/`#F6F7F9`/`#111827`, cobalt `#0047AB` with white text; dark `#0E1116`/`#171B22`/`#F3F4F6`, accent `#6E97F2` with dark text (a dark-mode blue cannot both read as text on the background and carry white text at AA: 4.1:1 measured for `#3D6FE0`). Cards are bordered on the background, buttons 44 px with 8 px radius, badges use `accentSoft` with body text, the selected radio option is cobalt. New token tests pin a blue accent, neutral background and surface, and `text`/`accentSoft` and `accent`/`background` contrast.
+- **L3** (2026-11-11) — R2: `Icon` maps meanings to an SF Symbol and a Material Symbol (all names checked against `sf-symbols-typescript` and `expo-symbols`' Android list) and hides itself from screen readers; `IconButton` (40 px, label required, "accent" variant for the main action). Rows' "⋯" and "×" are icon buttons with the same accessible labels; the composer is one rounded field with a round cobalt send button; settings is a gear; "Subir PDF", "Nuevo chat", "Nuevo proyecto" and "Crear …" carry icons.

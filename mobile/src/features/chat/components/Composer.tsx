@@ -2,7 +2,7 @@ import { useState } from "react";
 import { TextInput, View } from "react-native";
 
 import { useTheme, useThemedStyles, type Theme } from "@/shared/theme";
-import { Button } from "@/shared/ui";
+import { IconButton } from "@/shared/ui";
 
 type Props = {
   onSend: (text: string) => void;
@@ -31,28 +31,36 @@ export function Composer({ onSend, disabled }: Props) {
         onChangeText={setText}
         style={styles.input}
       />
-      <Button label="Enviar" onPress={submit} disabled={disabled || !text.trim()} />
+      <IconButton
+        icon="send"
+        label="Enviar"
+        variant="accent"
+        onPress={submit}
+        disabled={disabled || !text.trim()}
+      />
     </View>
   );
 }
 
 const createStyles = (theme: Theme) => ({
+  // One rounded field with the send button inside it, as in most chat apps.
   composer: {
     flexDirection: "row" as const,
     alignItems: "flex-end" as const,
     gap: theme.spacing.sm,
+    padding: theme.spacing.xs,
+    paddingLeft: theme.spacing.md,
+    borderRadius: theme.radii.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
   },
   input: {
     ...theme.typography.body,
     flex: 1,
-    minHeight: 48,
+    minHeight: 40,
     maxHeight: 140,
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
+    paddingVertical: theme.spacing.sm,
     color: theme.colors.text,
   },
 });
