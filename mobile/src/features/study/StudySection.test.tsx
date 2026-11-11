@@ -1,5 +1,5 @@
 import { act, screen, userEvent, waitFor } from "@testing-library/react-native";
-import { Alert, type AlertButton } from "react-native";
+import { Alert, Platform, type AlertButton } from "react-native";
 
 import { aDocument } from "@/features/documents/testing/documents";
 import { ApiError } from "@/shared/api";
@@ -227,9 +227,28 @@ describe("StudySection", () => {
   });
 
   describe("renaming and deleting", () => {
-    function pressAlertButton(text: string) {
-      const buttons = jest.mocked(Alert.alert).mock.calls[0][2] as AlertButton[];
-      buttons.find((button) => button.text === text)?.onPress?.();
+    type Prompt = (text?: string) => void;
+
+    beforeEach(() => {
+      jest.spyOn(Alert, "alert").mockImplementation(() => {});
+      jest.spyOn(Alert, "prompt").mockImplementation(() => {});
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    /** Presses a button of the `index`-th alert shown (the last one by default). */
+    async function pressAlertButton(text: string, index = -1) {
+      const calls = jest.mocked(Alert.alert).mock.calls;
+      const buttons = calls.at(index)?.[2] as AlertButton[];
+      await act(async () => buttons.find((button) => button.text === text)?.onPress?.());
+    }
+
+    async function savePrompt(name: string) {
+      const buttons = jest.mocked(Alert.prompt).mock.calls.at(-1)?.[2] as {
+        text: string;
+        onPress?: Prompt;
+      }[];
+      await act(async () => buttons.find((button) => button.text === "Guardar")?.onPress?.(name));
     }
 
     async function openOptions(title: string) {
@@ -238,21 +257,38 @@ describe("StudySection", () => {
       return user;
     }
 
-    it("renames a deck", async () => {
+    it("opens its options as a menu in the middle of the screen", async () => {
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+      await openOptions("Grafos");
+
+      const [title, message, buttons] = jest.mocked(Alert.alert).mock.calls[0];
+      expect([title, message]).toEqual(["Grafos", undefined]);
+      expect((buttons as AlertButton[]).map(({ text, style }) => [text, style])).toEqual([
+        ["Renombrar", undefined],
+        ["Eliminar", "destructive"],
+        ["Cancelar", "cancel"],
+      ]);
+      expect(screen.queryByLabelText("Nombre")).toBeNull();
+    });
+
+    it("renames a deck from a prompt", async () => {
       mockApi.patch.mockResolvedValue({ ...older, topic: "Árboles" });
       await renderWithQueryClient(<StudySection projectId="p1" />);
-      const user = await openOptions("Grafos");
+      await openOptions("Grafos");
 
-      await user.press(screen.getByRole("button", { name: "Renombrar" }));
-      expect(screen.getByLabelText("Nombre")).toHaveDisplayValue("Grafos");
-      await user.clear(screen.getByLabelText("Nombre"));
-      await user.type(screen.getByLabelText("Nombre"), "Árboles");
+      await pressAlertButton("Renombrar");
+      expect(jest.mocked(Alert.prompt).mock.calls[0]).toEqual([
+        "Renombrar",
+        "Si lo dejas vacío, se numera.",
+        expect.any(Array),
+        "plain-text",
+        "Grafos",
+      ]);
       serve({ ...server, "/documents/d1/flashcard-decks": [{ ...older, topic: "Árboles" }] });
-      await user.press(screen.getByRole("button", { name: "Guardar" }));
+      await savePrompt("  Árboles ");
 
       expect(await screen.findByText("Árboles")).toBeOnTheScreen();
       expect(mockApi.patch).toHaveBeenCalledWith("/flashcard-decks/f1", { topic: "Árboles" });
-      expect(screen.queryByLabelText("Nombre")).toBeNull();
     });
 
     it("clears a quiz's name so it is numbered again", async () => {
@@ -262,84 +298,105 @@ describe("StudySection", () => {
       await user.press(screen.getByRole("tab", { name: "Tests" }));
       await openOptions("Repaso");
 
-      await user.press(screen.getByRole("button", { name: "Renombrar" }));
-      await user.clear(screen.getByLabelText("Nombre"));
+      await pressAlertButton("Renombrar");
       serve({ ...server, "/documents/d1/quizzes": [{ ...quiz, topic: null }] });
-      await user.press(screen.getByRole("button", { name: "Guardar" }));
+      await savePrompt("   ");
 
       expect(await screen.findByText("Test 1")).toBeOnTheScreen();
       expect(mockApi.patch).toHaveBeenCalledWith("/quizzes/q1", { topic: null });
     });
 
-    it("shows a failed rename in the form", async () => {
+    it("shows a failed rename", async () => {
       mockApi.patch.mockRejectedValue(new ApiError(409, "It is still being generated."));
       await renderWithQueryClient(<StudySection projectId="p1" />);
-      const user = await openOptions("Grafos");
+      await openOptions("Grafos");
 
-      await user.press(screen.getByRole("button", { name: "Renombrar" }));
+      await pressAlertButton("Renombrar");
+      await savePrompt("Árboles");
+
+      await waitFor(() =>
+        expect(Alert.alert).toHaveBeenLastCalledWith(
+          "No se pudo renombrar",
+          "It is still being generated.",
+        ),
+      );
+    });
+
+    it("renames from a form where there is no prompt (Android)", async () => {
+      jest.replaceProperty(Platform, "OS", "android");
+      mockApi.patch.mockResolvedValue({ ...older, topic: "Árboles" });
+      const user = userEvent.setup();
+      await renderWithQueryClient(<StudySection projectId="p1" />);
+      await openOptions("Grafos");
+
+      await pressAlertButton("Renombrar");
+      expect(Alert.prompt).not.toHaveBeenCalled();
+      expect(screen.getByLabelText("Nombre")).toHaveDisplayValue("Grafos");
+      await user.clear(screen.getByLabelText("Nombre"));
+      await user.type(screen.getByLabelText("Nombre"), "Árboles");
       await user.press(screen.getByRole("button", { name: "Guardar" }));
 
-      expect(await screen.findByRole("alert")).toHaveTextContent("It is still being generated.");
+      await waitFor(() =>
+        expect(mockApi.patch).toHaveBeenCalledWith("/flashcard-decks/f1", { topic: "Árboles" }),
+      );
+      await waitFor(() => expect(screen.queryByLabelText("Nombre")).toBeNull());
     });
 
     it("deletes a deck after confirming", async () => {
-      jest.spyOn(Alert, "alert").mockImplementation(() => {});
       mockApi.delete.mockResolvedValue(undefined);
       await renderWithQueryClient(<StudySection projectId="p1" />);
-      const user = await openOptions("Grafos");
+      await openOptions("Grafos");
 
-      await user.press(screen.getByRole("button", { name: "Eliminar" }));
-      expect(Alert.alert).toHaveBeenCalledWith(
+      await pressAlertButton("Eliminar");
+      expect(jest.mocked(Alert.alert).mock.calls[1].slice(0, 2)).toEqual([
         "¿Eliminar estas flashcards?",
         "También desaparecerán del chat donde se crearon.",
-        expect.any(Array),
-        expect.anything(),
-      );
+      ]);
       expect(mockApi.delete).not.toHaveBeenCalled();
       serve({ ...server, "/documents/d1/flashcard-decks": [] });
-      pressAlertButton("Eliminar");
+      await pressAlertButton("Eliminar");
 
       await waitFor(() => expect(screen.queryByText("Grafos")).toBeNull());
       expect(mockApi.delete).toHaveBeenCalledWith("/flashcard-decks/f1");
     });
 
     it("deletes a quiz after confirming", async () => {
-      jest.spyOn(Alert, "alert").mockImplementation(() => {});
       mockApi.delete.mockResolvedValue(undefined);
       const user = userEvent.setup();
       await renderWithQueryClient(<StudySection projectId="p1" />);
       await user.press(screen.getByRole("tab", { name: "Tests" }));
       await openOptions("Repaso");
 
-      await user.press(screen.getByRole("button", { name: "Eliminar" }));
-      expect(jest.mocked(Alert.alert).mock.calls[0][0]).toBe("¿Eliminar este test?");
-      pressAlertButton("Eliminar");
+      await pressAlertButton("Eliminar");
+      expect(jest.mocked(Alert.alert).mock.calls[1][0]).toBe("¿Eliminar este test?");
+      await pressAlertButton("Eliminar");
 
       await waitFor(() => expect(mockApi.delete).toHaveBeenCalledWith("/quizzes/q1"));
     });
 
     it("keeps it when the deletion is cancelled", async () => {
-      jest.spyOn(Alert, "alert").mockImplementation(() => {});
       await renderWithQueryClient(<StudySection projectId="p1" />);
-      const user = await openOptions("Grafos");
+      await openOptions("Grafos");
 
-      await user.press(screen.getByRole("button", { name: "Eliminar" }));
-      pressAlertButton("Cancelar");
+      await pressAlertButton("Eliminar");
+      await pressAlertButton("Cancelar");
 
       expect(mockApi.delete).not.toHaveBeenCalled();
     });
 
     it("shows a failed deletion", async () => {
-      const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
       mockApi.delete.mockRejectedValue(new Error("Network request failed"));
       await renderWithQueryClient(<StudySection projectId="p1" />);
-      const user = await openOptions("Grafos");
+      await openOptions("Grafos");
 
-      await user.press(screen.getByRole("button", { name: "Eliminar" }));
-      pressAlertButton("Eliminar");
+      await pressAlertButton("Eliminar");
+      await pressAlertButton("Eliminar");
 
       await waitFor(() =>
-        expect(alert).toHaveBeenLastCalledWith("No se pudo eliminar", "Network request failed"),
+        expect(Alert.alert).toHaveBeenLastCalledWith(
+          "No se pudo eliminar",
+          "Network request failed",
+        ),
       );
     });
 
@@ -351,7 +408,7 @@ describe("StudySection", () => {
 
       await user.longPress(await screen.findByText("Roto"));
 
-      expect(screen.getByRole("button", { name: "Renombrar" })).toBeOnTheScreen();
+      expect(jest.mocked(Alert.alert).mock.calls[0][0]).toBe("Roto");
     });
 
     it("offers no options while it is being generated", async () => {

@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Platform, View } from "react-native";
 
 import { useTheme, useThemedStyles, type Theme } from "@/shared/theme";
 import {
@@ -22,7 +22,6 @@ import {
   type StudyKind,
 } from "./api";
 import { StudyForm } from "./components/StudyForm";
-import { StudyItemOptions } from "./components/StudyItemOptions";
 import { StudyNameForm } from "./components/StudyNameForm";
 import { StudyRow } from "./components/StudyRow";
 import { countError, formValues, toNewItem, type StudyFormValues } from "./studyForm";
@@ -69,11 +68,9 @@ const copy: Record<
 
 type FormErrors = { count?: string; form?: string };
 
-// One sheet whose content changes: presenting a second Modal while the first is closing fails on iOS.
+// The create form, and the rename form where there is no native prompt (Android).
 type SheetState =
-  | { kind: "create"; values: StudyFormValues }
-  | { kind: "options"; item: StudyItem }
-  | { kind: "rename"; item: StudyItem; name: string };
+  { kind: "create"; values: StudyFormValues } | { kind: "rename"; item: StudyItem; name: string };
 
 type Props = { projectId: string };
 
@@ -123,7 +120,42 @@ export function StudySection({ projectId }: Props) {
     return save(() => createItem.mutateAsync(item));
   }
 
+  // A menu in the middle of the screen, like the one that deletes a chat.
+  function openOptions(item: StudyItem) {
+    Alert.alert(
+      item.title,
+      undefined,
+      [
+        { text: "Renombrar", onPress: () => openRename(item) },
+        { text: "Eliminar", style: "destructive", onPress: () => confirmDelete(item) },
+        { text: "Cancelar", style: "cancel" },
+      ],
+      { cancelable: true },
+    );
+  }
+
+  function rename(item: StudyItem, name: string) {
+    renameItem.mutate(
+      { item, topic: name.trim() || null },
+      { onError: (failure) => Alert.alert("No se pudo renombrar", messageOf(failure)) },
+    );
+  }
+
   function openRename(item: StudyItem) {
+    // Alert.prompt only exists on iOS; elsewhere the name is edited in the sheet.
+    if (Platform.OS === "ios") {
+      Alert.prompt(
+        "Renombrar",
+        "Si lo dejas vacío, se numera.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Guardar", onPress: (name?: string) => rename(item, name ?? "") },
+        ],
+        "plain-text",
+        item.topic ?? "",
+      );
+      return;
+    }
     setErrors({});
     setSheet({ kind: "rename", item, name: item.topic ?? "" });
   }
@@ -134,25 +166,22 @@ export function StudySection({ projectId }: Props) {
     return save(() => renameItem.mutateAsync({ item, topic: name.trim() || null }));
   }
 
-  // The alert opens over the options sheet and closes it on either answer.
   function confirmDelete(item: StudyItem) {
     Alert.alert(
       text.deleteTitle,
       "También desaparecerán del chat donde se crearon.",
       [
-        { text: "Cancelar", style: "cancel", onPress: closeSheet },
+        { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
           style: "destructive",
-          onPress: () => {
-            closeSheet();
+          onPress: () =>
             deleteItem.mutate(item, {
               onError: (failure) => Alert.alert("No se pudo eliminar", messageOf(failure)),
-            });
-          },
+            }),
         },
       ],
-      { cancelable: true, onDismiss: closeSheet },
+      { cancelable: true },
     );
   }
 
@@ -177,12 +206,7 @@ export function StudySection({ projectId }: Props) {
           data={study.items}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <StudyRow
-              item={item}
-              countLabel={text.count}
-              onOpen={open}
-              onOptions={(chosen) => setSheet({ kind: "options", item: chosen })}
-            />
+            <StudyRow item={item} countLabel={text.count} onOpen={open} onOptions={openOptions} />
           )}
           ListEmptyComponent={
             <EmptyState icon="study" title={text.emptyTitle} message={text.emptyMessage} />
@@ -193,13 +217,7 @@ export function StudySection({ projectId }: Props) {
       )}
       <Sheet
         visible={sheet !== null}
-        title={
-          sheet?.kind === "create"
-            ? text.sheetTitle
-            : sheet?.kind === "rename"
-              ? "Renombrar"
-              : (sheet?.item.title ?? "")
-        }
+        title={sheet?.kind === "rename" ? "Renombrar" : text.sheetTitle}
         onClose={closeSheet}
       >
         {sheet?.kind === "create" ? (
@@ -213,12 +231,6 @@ export function StudySection({ projectId }: Props) {
             countError={errors.count}
             error={errors.form}
             loading={createItem.isPending}
-          />
-        ) : sheet?.kind === "options" ? (
-          <StudyItemOptions
-            onRename={() => openRename(sheet.item)}
-            onDelete={() => confirmDelete(sheet.item)}
-            onCancel={closeSheet}
           />
         ) : sheet ? (
           <StudyNameForm
