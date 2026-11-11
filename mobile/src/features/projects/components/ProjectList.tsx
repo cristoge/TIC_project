@@ -22,6 +22,7 @@ export function ProjectList({ projects, onOpen, onOptions }: Props) {
       renderItem={({ item }) => <ProjectRow project={item} onOpen={onOpen} onOptions={onOptions} />}
       ListEmptyComponent={
         <EmptyState
+          icon="project"
           title="Aún no tienes proyectos"
           message="Crea uno para subir tus PDFs y empezar a estudiar."
         />
@@ -34,5 +35,5 @@ export function ProjectList({ projects, onOpen, onOptions }: Props) {
 
 const createStyles = (theme: Theme) => ({
   list: { flex: 1 },
-  content: { gap: theme.spacing.sm, paddingBottom: theme.spacing.xl },
+  content: { paddingBottom: theme.spacing.xl },
 });

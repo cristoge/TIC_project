@@ -62,6 +62,7 @@ export function ChatsSection({ projectId }: Props) {
           )}
           ListEmptyComponent={
             <EmptyState
+              icon="chats"
               title="Aún no hay chats"
               message="Empieza uno para preguntar sobre los documentos del proyecto."
             />
@@ -77,5 +78,5 @@ export function ChatsSection({ projectId }: Props) {
 const createStyles = (theme: Theme) => ({
   section: { flex: 1, gap: theme.spacing.lg },
   list: { flex: 1 },
-  content: { gap: theme.spacing.sm, paddingBottom: theme.spacing.xl },
+  content: { paddingBottom: theme.spacing.xl },
 });

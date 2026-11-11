@@ -79,6 +79,7 @@ export function ChatScreen({
             )}
             ListEmptyComponent={
               <EmptyState
+                icon="chats"
                 title="Pregunta sobre tus documentos"
                 message="También puedes pedir un resumen, flashcards o un test."
               />

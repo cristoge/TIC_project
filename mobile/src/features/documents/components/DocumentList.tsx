@@ -21,6 +21,7 @@ export function DocumentList({ documents, onOptions }: Props) {
       renderItem={({ item }) => <DocumentRow document={item} onOptions={onOptions} />}
       ListEmptyComponent={
         <EmptyState
+          icon="documents"
           title="Aún no hay documentos"
           message="Sube un PDF para poder chatear y estudiar con él."
         />
@@ -33,5 +34,5 @@ export function DocumentList({ documents, onOptions }: Props) {
 
 const createStyles = (theme: Theme) => ({
   list: { flex: 1 },
-  content: { gap: theme.spacing.sm, paddingBottom: theme.spacing.xl },
+  content: { paddingBottom: theme.spacing.xl },
 });

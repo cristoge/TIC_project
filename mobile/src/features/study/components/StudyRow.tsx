@@ -1,7 +1,7 @@
 import { Pressable } from "react-native";
 
 import { useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, Badge, Card, IconButton } from "@/shared/ui";
+import { AppText, Badge, IconButton, ListItem } from "@/shared/ui";
 
 import type { StudyItem } from "../api";
 
@@ -18,7 +18,7 @@ export function StudyRow({ item, countLabel, onOpen, onOptions }: Props) {
   const ready = item.status === "ready";
 
   return (
-    <Card style={styles.card}>
+    <ListItem>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ disabled: !ready }}
@@ -53,12 +53,11 @@ export function StudyRow({ item, countLabel, onOpen, onOptions }: Props) {
           onPress={() => onOptions(item)}
         />
       )}
-    </Card>
+    </ListItem>
   );
 }
 
 const createStyles = (theme: Theme) => ({
-  card: { flexDirection: "row" as const, alignItems: "center" as const, gap: theme.spacing.sm },
   main: { flex: 1, gap: theme.spacing.xs },
   pressed: { opacity: 0.6 },
 });

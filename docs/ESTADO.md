@@ -2,7 +2,7 @@
 
 Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-11-11 (tarde)**. Rama: `migration` (backend y app), subida a GitHub.
 
-> **En una frase:** el backend funciona en local de principio a fin y la app Expo nueva ya tiene **login, proyectos y documentos** probados en el simulador contra ese backend, y el **chat**, todo probado en el simulador; el **estudio** y los **ajustes**. **La app está completa y probada en el simulador.** Siguiente: los avisos pequeños o la limpieza de tipado del backend.
+> **En una frase:** el backend funciona en local de principio a fin y la app Expo nueva ya tiene **login, proyectos y documentos** probados en el simulador contra ese backend, y el **chat**, todo probado en el simulador; el **estudio** y los **ajustes**. **La app está completa y probada en el simulador**, y acaba de pasar por un rediseño (azul cobalto, iconos y menú lateral como el de la app de Claude; `odd/tasks/mobile-redesign.md`) que falta probar en el simulador.
 
 ## Lo que está hecho
 
@@ -61,7 +61,7 @@ La API y el agente tienen que escuchar en `0.0.0.0`, no solo en `127.0.0.1`, par
 - **Troceador propio** (ni LangChain ni semchunk, probados y descartados).
 - **Monorepo**: backend, app, infraestructura y documentación en el mismo repositorio.
 - **Ningún cambio en AWS sin permiso explícito** del autor (despliegues, recursos, llamadas de pago).
-- **App** (detalle en `docs/app/README.md`): solo login con `fetch` directo a Cognito; estética inspirada en Donkey Republic (naranja `#FF6400` solo para acciones, Geist); `StyleSheet` + tokens; Proyectos → `Chats | Documentos | Estudio`; resumen, flashcards y test como tarjetas en el chat; Markdown con `react-native-marked`.
+- **App** (detalle en `docs/app/README.md`): solo login con `fetch` directo a Cognito; estética sobria con acento azul cobalto e iconos SF Symbols (Geist); `StyleSheet` + tokens; cada proyecto con menú lateral (Nuevo chat, Chats, Documentos, Estudio, Recientes, Ajustes) y la app abre en el último proyecto; resumen, flashcards y test como tarjetas en el chat; Markdown con `react-native-marked`.
 - **Límite de PDF: 30 MB** y 20 documentos por proyecto.
 - **Un chat se crea con su primer mensaje** y toma como título sus primeros 60 caracteres (la API no permite renombrar chats); «Nuevo chat» no deja nada guardado si no se escribe.
 - **Entrega**: commits por funcionalidad directamente en `migration`, sin PRs (proyecto personal; la cadena de ramas se fusionó y se borró el 2026-11-10).

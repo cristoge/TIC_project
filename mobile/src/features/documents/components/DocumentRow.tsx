@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 
 import { useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, Badge, Card, IconButton } from "@/shared/ui";
+import { AppText, Badge, IconButton, ListItem } from "@/shared/ui";
 
 import type { Document } from "../api";
 import { documentDetails, statusLabel } from "../documentDetails";
@@ -17,7 +17,7 @@ export function DocumentRow({ document, onOptions }: Props) {
   const status = statusLabel(document.status);
 
   return (
-    <Card style={styles.card}>
+    <ListItem>
       <Pressable
         onLongPress={() => onOptions(document)}
         style={({ pressed }) => [styles.main, pressed && styles.pressed]}
@@ -44,12 +44,11 @@ export function DocumentRow({ document, onOptions }: Props) {
         label={`Opciones de ${document.name}`}
         onPress={() => onOptions(document)}
       />
-    </Card>
+    </ListItem>
   );
 }
 
 const createStyles = (theme: Theme) => ({
-  card: { flexDirection: "row" as const, alignItems: "center" as const, gap: theme.spacing.sm },
   main: { flex: 1, gap: theme.spacing.xs },
   status: { gap: theme.spacing.xs, paddingTop: theme.spacing.xs },
   pressed: { opacity: 0.6 },

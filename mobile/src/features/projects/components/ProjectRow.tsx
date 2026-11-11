@@ -1,7 +1,7 @@
 import { Pressable } from "react-native";
 
 import { useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, Card, IconButton } from "@/shared/ui";
+import { AppText, IconButton, ListItem } from "@/shared/ui";
 
 import type { Project } from "../api";
 
@@ -15,7 +15,7 @@ export function ProjectRow({ project, onOpen, onOptions }: Props) {
   const styles = useThemedStyles(createStyles);
 
   return (
-    <Card style={styles.card}>
+    <ListItem>
       <Pressable
         accessibilityRole="button"
         onPress={() => onOpen(project)}
@@ -34,12 +34,11 @@ export function ProjectRow({ project, onOpen, onOptions }: Props) {
         label={`Opciones de ${project.name}`}
         onPress={() => onOptions(project)}
       />
-    </Card>
+    </ListItem>
   );
 }
 
 const createStyles = (theme: Theme) => ({
-  card: { flexDirection: "row" as const, alignItems: "center" as const, gap: theme.spacing.sm },
   main: { flex: 1, gap: theme.spacing.xs },
   pressed: { opacity: 0.6 },
 });

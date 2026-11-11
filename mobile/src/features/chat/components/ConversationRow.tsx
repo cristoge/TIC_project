@@ -1,7 +1,7 @@
 import { Pressable } from "react-native";
 
 import { useThemedStyles, type Theme } from "@/shared/theme";
-import { AppText, Card, IconButton } from "@/shared/ui";
+import { AppText, IconButton, ListItem } from "@/shared/ui";
 
 import type { Conversation } from "../api";
 import { conversationDate, conversationTitle } from "../conversationDetails";
@@ -17,7 +17,7 @@ export function ConversationRow({ conversation, onOpen, onDelete }: Props) {
   const title = conversationTitle(conversation);
 
   return (
-    <Card style={styles.card}>
+    <ListItem>
       <Pressable
         accessibilityRole="button"
         onPress={() => onOpen(conversation)}
@@ -36,12 +36,11 @@ export function ConversationRow({ conversation, onOpen, onDelete }: Props) {
         label={`Eliminar ${title}`}
         onPress={() => onDelete(conversation)}
       />
-    </Card>
+    </ListItem>
   );
 }
 
 const createStyles = (theme: Theme) => ({
-  card: { flexDirection: "row" as const, alignItems: "center" as const, gap: theme.spacing.sm },
   main: { flex: 1, gap: theme.spacing.xs },
   pressed: { opacity: 0.6 },
 });

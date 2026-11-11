@@ -182,7 +182,9 @@ export function StudySection({ projectId }: Props) {
               onOptions={(chosen) => setSheet({ kind: "options", item: chosen })}
             />
           )}
-          ListEmptyComponent={<EmptyState title={text.emptyTitle} message={text.emptyMessage} />}
+          ListEmptyComponent={
+            <EmptyState icon="study" title={text.emptyTitle} message={text.emptyMessage} />
+          }
           style={styles.list}
           contentContainerStyle={styles.content}
         />
@@ -238,5 +240,5 @@ function messageOf(failure: unknown): string {
 const createStyles = (theme: Theme) => ({
   section: { flex: 1, gap: theme.spacing.lg },
   list: { flex: 1 },
-  content: { gap: theme.spacing.sm, paddingBottom: theme.spacing.xl },
+  content: { paddingBottom: theme.spacing.xl },
 });
