@@ -25,7 +25,7 @@ Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-
 | App: ajustes | **Pendiente** (T8) | `odd/tasks/mobile-app.md` |
 | Infraestructura AWS de la app (`infra/app`) | **Aparcada** | — |
 
-Seguimiento tarea a tarea, con las peticiones literales del autor: `odd/tasks/mobile-app.md` (app) y `odd/tasks/aws-migration.md` (backend). La app tiene 213 tests (`cd mobile && npx jest`).
+Seguimiento tarea a tarea, con las peticiones literales del autor: `odd/tasks/mobile-app.md` (app) y `odd/tasks/aws-migration.md` (backend). La app tiene 212 tests (`cd mobile && npx jest`).
 
 ### Datos que hacen falta para arrancar
 
