@@ -30,9 +30,9 @@ export function Composer({ onSend, disabled }: Props) {
     <View
       style={[
         styles.composer,
-        // The screen already pads its bottom; lift the field the rest of the way over the home
-        // indicator so it stays clear of the device's rounded corners.
-        { marginBottom: Math.max(0, bottomInset + theme.spacing.sm - theme.spacing.lg) },
+        // The screen already pads its bottom; lift the field the rest of the way to the top of the
+        // home indicator area so it stays clear of the device's rounded corners.
+        { marginBottom: Math.max(0, bottomInset - theme.spacing.lg) },
       ]}
     >
       <TextInput
