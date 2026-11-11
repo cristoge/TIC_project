@@ -49,19 +49,20 @@ Login
 
 ## Estética
 
-Sobria y profesional (rediseño del 2026-11-11, `odd/tasks/mobile-redesign.md`): fondos blancos y grises neutros, bordes finos en vez de bloques de color, un único acento azul cobalto y mucho aire.
+Sobria y profesional (rediseño del 2026-11-11, `odd/tasks/mobile-redesign.md`): fondos blancos y grises neutros, bordes finos en vez de bloques de color, un único acento azul `#66A3FF` y mucho aire.
 
 | Token | Claro | Oscuro | Uso |
 |---|---|---|---|
-| `accent` | `#0047AB` | `#6E97F2` | Acción principal de cada pantalla, enlaces y selección actual |
-| `onAccent` | `#FFFFFF` | `#111112` | Texto sobre el acento |
+| `accent` | `#66A3FF` | `#66A3FF` | Relleno de la acción principal, selección actual y borde de las flashcards |
+| `onAccent` | `#111827` | `#111112` | Texto sobre el acento |
+| `accentText` | `#1A66D9` | `#66A3FF` | Texto e iconos azules (en claro, un tono más oscuro del mismo azul para que se lea sobre blanco) |
 | `accentSoft` | `#E6EEF9` | `#1B2840` | Insignias y entrada seleccionada del menú |
 | `background` | `#FFFFFF` | `#111112` | Fondo de pantalla, tarjetas y campos |
 | `surface` | `#F6F7F9` | `#1A1A1C` | Menú lateral, burbujas propias, fondo de los selectores |
 | `border` | `#E5E7EB` | `#2C2C30` | Bordes y separadores |
 | `text` / `textMuted` | `#111827` / `#4B5563` | `#F3F4F6` / `#A1A1A8` | Texto principal y de apoyo |
 
-- **Contraste**: todos los pares de texto y fondo cumplen WCAG AA (4,5:1), comprobado en `tokens.test.ts`. En oscuro, ningún azul se lee como texto sobre el fondo y a la vez lleva texto blanco encima, así que el texto sobre el acento es oscuro.
+- **Contraste**: todos los pares de texto y fondo cumplen WCAG AA (4,5:1), comprobado en `tokens.test.ts`. `#66A3FF` sobre blanco da 2,5:1: vale como relleno con texto oscuro encima (7:1), pero el texto azul en claro usa `accentText`.
 - **Tipografía**: **Geist**, con títulos de 24 px en seminegrita y texto de 16 px.
 - **Formas**: radios de 6 a 16 px, botones de 44 px de alto.
 

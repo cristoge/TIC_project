@@ -1,6 +1,7 @@
 import { screen, userEvent } from "@testing-library/react-native";
 
 import { createFakeApi, renderWithQueryClient } from "@/shared/testing/query";
+import { colors } from "@/shared/theme";
 
 import { DeckScreen } from "./DeckScreen";
 import { aDeck } from "./testing/artifacts";
@@ -24,6 +25,14 @@ describe("DeckScreen", () => {
     expect(screen.getByText("1 / 2")).toBeOnTheScreen();
     expect(screen.queryByText("Un vértice.")).toBeNull();
     expect(mockApi.get).toHaveBeenCalledWith("/flashcard-decks/f1");
+  });
+
+  it("outlines the card in the accent blue", async () => {
+    await renderWithQueryClient(<DeckScreen deckId="f1" />);
+
+    expect(await screen.findByRole("button", { name: /¿Qué es un nodo\?/ })).toHaveStyle({
+      borderColor: colors.light.accent,
+    });
   });
 
   it("flips the card to its answer and page, and back", async () => {

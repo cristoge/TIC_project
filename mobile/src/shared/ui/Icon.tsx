@@ -40,7 +40,11 @@ export function Icon({ name, size = 20, color = "text" }: Props) {
       importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
     >
-      <SymbolView name={symbols[name]} size={size} tintColor={theme.colors[color]} />
+      <SymbolView
+        name={symbols[name]}
+        size={size}
+        tintColor={theme.colors[color === "accent" ? "accentText" : color]}
+      />
     </View>
   );
 }

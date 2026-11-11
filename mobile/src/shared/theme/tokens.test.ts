@@ -19,7 +19,9 @@ const readablePairs: [ColorName, ColorName][] = [
   ["textMuted", "surface"],
   ["onAccent", "accent"],
   ["text", "accentSoft"],
-  ["accent", "background"],
+  ["accentText", "background"],
+  ["accentText", "surface"],
+  ["accentText", "accentSoft"],
   ["danger", "background"],
 ];
 
@@ -34,12 +36,8 @@ describe.each(["light", "dark"] as const)("%s colors", (scheme) => {
     );
   });
 
-  it("uses a cobalt blue as the accent", () => {
-    const [r, g, b] = [1, 3, 5].map((start) =>
-      parseInt(colors[scheme].accent.slice(start, start + 2), 16),
-    );
-    expect(b).toBeGreaterThan(r + 100);
-    expect(b).toBeGreaterThan(g + 60);
+  it("uses #66A3FF as the accent", () => {
+    expect(colors[scheme].accent).toBe("#66A3FF");
   });
 
   it("keeps the background and surface neutral", () => {

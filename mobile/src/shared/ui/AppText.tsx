@@ -10,6 +10,14 @@ type Props = TextProps & {
 export function AppText({ variant = "body", color = "text", style, ...props }: Props) {
   const theme = useTheme();
   return (
-    <Text style={[theme.typography[variant], { color: theme.colors[color] }, style]} {...props} />
+    <Text
+      style={[
+        theme.typography[variant],
+        // Blue text takes the shade of the accent that reads on the background.
+        { color: theme.colors[color === "accent" ? "accentText" : color] },
+        style,
+      ]}
+      {...props}
+    />
   );
 }

@@ -8,9 +8,11 @@ export const colors = {
     text: "#111827",
     textMuted: "#4B5563",
     border: "#E5E7EB",
-    // Cobalt blue for the main action of a screen, links and the current selection.
-    accent: "#0047AB",
-    onAccent: "#FFFFFF",
+    // The brand blue fills the main action of a screen and the current selection. On white it is too
+    // light for text, so text on it is dark and blue text uses `accentText`, a deeper shade of it.
+    accent: "#66A3FF",
+    onAccent: "#111827",
+    accentText: "#1A66D9",
     // Tinted background for badges and the selected menu entry.
     accentSoft: "#E6EEF9",
     danger: "#B42318",
@@ -22,10 +24,10 @@ export const colors = {
     text: "#F3F4F6",
     textMuted: "#A1A1A8",
     border: "#2C2C30",
-    // A lighter cobalt so it reads as text on the dark background. No blue does that and also
-    // carries white text at AA, so text on it is dark here.
-    accent: "#6E97F2",
+    // On the dark background the brand blue reads as text too, and takes dark text on it.
+    accent: "#66A3FF",
     onAccent: "#111112",
+    accentText: "#66A3FF",
     accentSoft: "#1B2840",
     danger: "#F97066",
   },
