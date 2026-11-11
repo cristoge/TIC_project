@@ -4,7 +4,8 @@ Deployed: AgentCore validates the Cognito ID token (inbound JWT authorizer) and
 passes the Authorization header through (request header allowlist); set
 AUTH_VALIDATED_UPSTREAM=true.
 Local: `uv run python -m entrypoints.agent.app` serves POST /invocations on :8080;
-COGNITO_ISSUER and COGNITO_CLIENT_ID make it verify tokens itself.
+COGNITO_ISSUER and COGNITO_CLIENT_ID make it verify tokens itself. It listens on
+127.0.0.1 unless AGENT_HOST says otherwise (0.0.0.0 lets a phone or simulator reach it).
 
 Environment: DATABASE_URL, DOCUMENTS_BUCKET.
 """
@@ -76,4 +77,4 @@ async def invoke(payload, context):
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host=os.environ.get("AGENT_HOST"))

@@ -117,7 +117,7 @@ Resumen, flashcards y test se crean con `202` y `status: "pending"`. La app cons
 
 ### Chat
 
-**Petición**: `POST EXPO_PUBLIC_AGENT_URL` con `{"conversation_id": "<uuid>", "message": "..."}` y el ID token. Antes, el chat se crea con `POST /projects/{id}/conversations`.
+**Petición**: `POST EXPO_PUBLIC_AGENT_URL` con `{"conversation_id": "<uuid>", "message": "..."}` y el ID token. Antes, el chat se crea con `POST /projects/{id}/conversations`. La app lo crea al enviar el primer mensaje, con sus primeros 60 caracteres como título.
 
 **Respuesta**: SSE, un evento JSON por mensaje:
 
@@ -128,6 +128,8 @@ Resumen, flashcards y test se crean con `202` y `status: "pending"`. La app cons
 | `{"type": "artifact", "kind": "summary" \| "flashcards" \| "quiz", "id": "..."}` | Pinta la tarjeta y sondea su contenido |
 | `{"type": "end", "message_id": "..."}` | Cierra el mensaje |
 | `{"type": "error", "code": "...", "message": "..."}` | Muestra el aviso; ese turno no se guarda |
+
+**Token rechazado**: en local el agente responde `200` con un único evento `error` de código `unauthenticated`; AgentCore responde `401`. En los dos casos la app renueva el token y repite el turno **una vez**.
 
 **Historial**: `GET /conversations/{id}/messages` trae `sources`, `summary_id`, `flashcard_deck_id` y `quiz_id`, así que las tarjetas se pintan igual al reabrir un chat.
 

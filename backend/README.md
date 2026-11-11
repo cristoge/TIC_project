@@ -38,6 +38,7 @@ set -a; source .env.local; set +a
 uv run python -m scripts.migrate               # create the schema
 uv run uvicorn entrypoints.api.main:local_app --factory --reload   # REST API on :8000
 uv run python -m entrypoints.agent.app         # chat agent on :8080 (another terminal, same env)
+# AGENT_HOST=0.0.0.0 makes the agent reachable from a phone or simulator (default 127.0.0.1)
 ```
 
 Try it with a token from `uv run python -m scripts.get_token you@example.com` (see `infra/README.md`):
