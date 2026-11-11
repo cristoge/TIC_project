@@ -20,6 +20,7 @@ const symbols = {
   close: { ios: "xmark", android: "close" },
   project: { ios: "folder", android: "folder" },
   add: { ios: "plus", android: "add" },
+  check: { ios: "checkmark", android: "check" },
 } as const satisfies Record<string, Extract<SymbolViewProps["name"], object>>;
 
 export type IconName = keyof typeof symbols;

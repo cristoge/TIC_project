@@ -40,7 +40,7 @@ Login
    │              ├─ Flashcards → dar la vuelta a cada tarjeta
    │              └─ Test → una pregunta cada vez → nota y explicaciones
    ├─ Recientes   los 8 últimos chats
-   └─ Nombre y email → Ajustes: nombre, tema sistema/claro/oscuro, cerrar sesión
+   └─ Nombre y email → Ajustes: nombre, tema sistema/claro/oscuro, color de acento, cerrar sesión
 ```
 
 - **Todo cuelga del proyecto**: el backend no tiene chats sin proyecto ni listas globales.
@@ -49,7 +49,7 @@ Login
 
 ## Estética
 
-Sobria y profesional (rediseño del 2026-11-11, `odd/tasks/mobile-redesign.md`): fondos blancos y grises neutros, bordes finos en vez de bloques de color, un único acento azul `#66A3FF` y mucho aire.
+Sobria y profesional (rediseño del 2026-11-11, `odd/tasks/mobile-redesign.md`): fondos blancos y grises neutros, bordes finos en vez de bloques de color, un único acento (azul `#66A3FF` por defecto) y mucho aire.
 
 | Token | Claro | Oscuro | Uso |
 |---|---|---|---|
@@ -63,6 +63,7 @@ Sobria y profesional (rediseño del 2026-11-11, `odd/tasks/mobile-redesign.md`):
 | `text` / `textMuted` | `#111827` / `#4B5563` | `#F3F4F6` / `#A1A1A8` | Texto principal y de apoyo |
 
 - **Contraste**: todos los pares de texto y fondo cumplen WCAG AA (4,5:1), comprobado en `tokens.test.ts`. `#66A3FF` sobre blanco da 2,5:1: vale como relleno con texto oscuro encima (7:1), pero el texto azul en claro usa `accentText`.
+- **Color de acento**: en Ajustes se elige entre azul (por defecto), violeta `#A78BFA`, verde `#34D399`, naranja `#FB923C` y rosa `#F472B6` (`accents` en `tokens.ts`). Cada uno cambia solo `accent`, `accentText` y `accentSoft`, cumple los mismos pares de contraste (lo comprueba `tokens.test.ts`) y se guarda en el dispositivo (`settings.accent`).
 - **Tipografía**: **Geist**, con títulos de 24 px en seminegrita y texto de 16 px.
 - **Formas**: radios de 6 a 16 px, botones de 44 px de alto.
 

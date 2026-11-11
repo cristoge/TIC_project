@@ -12,6 +12,7 @@ import {
 import { AppText, Button, Card, ErrorState, SegmentedControl, TextField } from "@/shared/ui";
 
 import { NAME_MAX_LENGTH, useMe, useUpdateName } from "./api";
+import { AccentPicker } from "./components/AccentPicker";
 
 const SCHEMES = [
   { value: "system", label: "Sistema" },
@@ -25,6 +26,7 @@ export function SettingsScreen() {
   const me = useMe();
   const updateName = useUpdateName();
   const preference = useThemePreference((state) => state.preference);
+  const accent = useThemePreference((state) => state.accent);
   // What the user typed; until then the field shows the saved name.
   const [draft, setDraft] = useState<string | null>(null);
   const [error, setError] = useState<string | undefined>();
@@ -116,6 +118,13 @@ export function SettingsScreen() {
           options={SCHEMES}
           value={preference}
           onChange={(value) => useThemePreference.getState().setPreference(value)}
+        />
+      </Card>
+      <Card>
+        <AppText variant="label">Color de acento</AppText>
+        <AccentPicker
+          value={accent}
+          onChange={(value) => useThemePreference.getState().setAccent(value)}
         />
       </Card>
       <Button label="Cerrar sesión" variant="danger" onPress={confirmSignOut} />

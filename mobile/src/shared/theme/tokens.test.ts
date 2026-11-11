@@ -1,4 +1,4 @@
-import { colors, type ColorName } from "./tokens";
+import { accents, colors, colorsFor, type AccentName, type ColorName } from "./tokens";
 
 // WCAG 2.x relative luminance and contrast ratio.
 function luminance(hex: string): number {
@@ -40,6 +40,20 @@ describe.each(["light", "dark"] as const)("%s colors", (scheme) => {
     expect(colors[scheme].accent).toBe("#66A3FF");
   });
 
+  it.each(Object.keys(accents) as AccentName[])(
+    "keeps every pair readable with the %s accent",
+    (accent) => {
+      const palette = colorsFor(scheme, accent);
+      for (const [foreground, background] of readablePairs) {
+        expect(contrast(palette[foreground], palette[background])).toBeGreaterThanOrEqual(4.5);
+      }
+    },
+  );
+
+  it("defaults to the blue accent", () => {
+    expect(colorsFor(scheme, "blue")).toEqual(colors[scheme]);
+  });
+
   it("keeps the background and surface neutral", () => {
     for (const name of ["background", "surface"] as const) {
       const [r, g, b] = [1, 3, 5].map((start) =>
@@ -47,5 +61,17 @@ describe.each(["light", "dark"] as const)("%s colors", (scheme) => {
       );
       expect(Math.max(r, g, b) - Math.min(r, g, b)).toBeLessThanOrEqual(16);
     }
+  });
+});
+
+it("offers four accents besides blue, each changing only the accent colours", () => {
+  expect(Object.keys(accents)).toEqual(["blue", "violet", "green", "orange", "pink"]);
+  const green = colorsFor("light", "green");
+  expect(green.accent).not.toBe(colors.light.accent);
+  expect({ ...green, accent: "", accentText: "", accentSoft: "" }).toEqual({
+    ...colors.light,
+    accent: "",
+    accentText: "",
+    accentSoft: "",
   });
 });

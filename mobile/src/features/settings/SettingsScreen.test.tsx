@@ -24,7 +24,7 @@ beforeEach(() => {
   mockApi.get.mockResolvedValue(me);
   signOut.mockClear();
   useSession.setState({ status: "signedIn", idToken: "id-1", signOut });
-  useThemePreference.setState({ preference: "system" });
+  useThemePreference.setState({ preference: "system", accent: "blue" });
   jest.spyOn(Appearance, "setColorScheme").mockImplementation(() => {});
 });
 
@@ -97,6 +97,26 @@ describe("SettingsScreen", () => {
 
     expect(useThemePreference.getState().preference).toBe("dark");
     expect(screen.getByRole("tab", { name: "Oscuro" })).toBeSelected();
+  });
+
+  it("changes the accent colour, blue by default", async () => {
+    const user = userEvent.setup();
+    await renderWithQueryClient(<SettingsScreen />);
+    const options = screen.getAllByRole("radio");
+    expect(options.map((option) => option.props.accessibilityLabel)).toEqual([
+      "Azul",
+      "Violeta",
+      "Verde",
+      "Naranja",
+      "Rosa",
+    ]);
+    expect(screen.getByRole("radio", { name: "Azul" })).toBeChecked();
+
+    await user.press(screen.getByRole("radio", { name: "Verde" }));
+
+    expect(useThemePreference.getState().accent).toBe("green");
+    expect(screen.getByRole("radio", { name: "Verde" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Azul" })).not.toBeChecked();
   });
 
   it("signs out after confirming", async () => {

@@ -8,7 +8,16 @@ import {
 } from "react-native";
 
 import { useThemePreference } from "./themePreference";
-import { colors, radii, spacing, typography, type ColorScheme, type Colors } from "./tokens";
+import {
+  accents,
+  colorsFor,
+  radii,
+  spacing,
+  typography,
+  type AccentName,
+  type ColorScheme,
+  type Colors,
+} from "./tokens";
 
 export type Theme = {
   scheme: ColorScheme;
@@ -18,17 +27,25 @@ export type Theme = {
   typography: typeof typography;
 };
 
-// Built once so each scheme keeps a stable identity for memoized styles.
-const themes: Record<ColorScheme, Theme> = {
-  light: { scheme: "light", colors: colors.light, spacing, radii, typography },
-  dark: { scheme: "dark", colors: colors.dark, spacing, radii, typography },
-};
+// Built once so each scheme and accent keeps a stable identity for memoized styles.
+const themes = Object.fromEntries(
+  (["light", "dark"] as const).map((scheme) => [
+    scheme,
+    Object.fromEntries(
+      (Object.keys(accents) as AccentName[]).map((accent) => [
+        accent,
+        { scheme, colors: colorsFor(scheme, accent), spacing, radii, typography },
+      ]),
+    ),
+  ]),
+) as Record<ColorScheme, Record<AccentName, Theme>>;
 
 export function useTheme(): Theme {
   const system = useColorScheme();
   const preference = useThemePreference((state) => state.preference);
-  if (preference !== "system") return themes[preference];
-  return themes[system === "dark" ? "dark" : "light"];
+  const accent = useThemePreference((state) => state.accent);
+  const scheme = preference !== "system" ? preference : system === "dark" ? "dark" : "light";
+  return themes[scheme][accent];
 }
 
 /** Styles that depend on the theme. Declare `factory` at module level so it stays stable. */

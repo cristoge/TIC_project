@@ -37,6 +37,39 @@ export type ColorScheme = keyof typeof colors;
 export type ColorName = keyof (typeof colors)["light"];
 export type Colors = Record<ColorName, string>;
 
+type AccentColors = Pick<Colors, "accent" | "accentText" | "accentSoft">;
+
+// The accents the user can pick in Ajustes; blue is the default above. Each fill takes the scheme's dark
+// `onAccent` text, and its `accentText` is a deeper shade where the fill is too light to read on white.
+export const accents = {
+  blue: {
+    light: { accent: "#66A3FF", accentText: "#1A66D9", accentSoft: "#E6EEF9" },
+    dark: { accent: "#66A3FF", accentText: "#66A3FF", accentSoft: "#1B2840" },
+  },
+  violet: {
+    light: { accent: "#A78BFA", accentText: "#6D28D9", accentSoft: "#EFEAFD" },
+    dark: { accent: "#A78BFA", accentText: "#A78BFA", accentSoft: "#2A2140" },
+  },
+  green: {
+    light: { accent: "#34D399", accentText: "#047857", accentSoft: "#E3F5EE" },
+    dark: { accent: "#34D399", accentText: "#34D399", accentSoft: "#13302A" },
+  },
+  orange: {
+    light: { accent: "#FB923C", accentText: "#C2410C", accentSoft: "#FDEDE1" },
+    dark: { accent: "#FB923C", accentText: "#FB923C", accentSoft: "#3A2414" },
+  },
+  pink: {
+    light: { accent: "#F472B6", accentText: "#BE185D", accentSoft: "#FCE7F2" },
+    dark: { accent: "#F472B6", accentText: "#F472B6", accentSoft: "#3A1A2C" },
+  },
+} as const satisfies Record<string, Record<ColorScheme, AccentColors>>;
+
+export type AccentName = keyof typeof accents;
+
+export function colorsFor(scheme: ColorScheme, accent: AccentName): Colors {
+  return { ...colors[scheme], ...accents[accent][scheme] };
+}
+
 export const spacing = {
   xs: 4,
   sm: 8,

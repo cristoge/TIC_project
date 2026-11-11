@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react-native";
 import { useColorScheme } from "react-native";
 
 import { useThemePreference } from "./themePreference";
-import { colors } from "./tokens";
+import { colors, colorsFor } from "./tokens";
 import { useTheme } from "./useTheme";
 
 jest.mock("react-native/Libraries/Utilities/useColorScheme", () => ({
@@ -12,7 +12,7 @@ jest.mock("react-native/Libraries/Utilities/useColorScheme", () => ({
 
 const mockedScheme = useColorScheme as jest.MockedFunction<typeof useColorScheme>;
 
-afterEach(() => useThemePreference.setState({ preference: "system" }));
+afterEach(() => useThemePreference.setState({ preference: "system", accent: "blue" }));
 
 describe("useTheme", () => {
   it("follows a dark system scheme", async () => {
@@ -44,5 +44,14 @@ describe("useTheme", () => {
     await act(() => useThemePreference.setState({ preference: "dark" }));
 
     expect(result.current.colors).toEqual(colors.dark);
+  });
+
+  it("uses the accent the user chose", async () => {
+    mockedScheme.mockReturnValue("dark");
+    const { result } = await renderHook(() => useTheme());
+
+    await act(() => useThemePreference.setState({ accent: "orange" }));
+
+    expect(result.current.colors).toEqual(colorsFor("dark", "orange"));
   });
 });

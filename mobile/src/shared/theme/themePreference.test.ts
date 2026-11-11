@@ -2,8 +2,10 @@ import { Appearance } from "react-native";
 
 import { createThemePreferenceStore } from "./themePreference";
 
-function memoryStorage(initial?: string) {
-  const items = new Map<string, string>(initial ? [["settings.theme", initial]] : []);
+function memoryStorage(initial?: string, accent?: string) {
+  const items = new Map<string, string>();
+  if (initial) items.set("settings.theme", initial);
+  if (accent) items.set("settings.accent", accent);
   return {
     items,
     getItemAsync: jest.fn(async (key: string) => items.get(key) ?? null),
@@ -77,5 +79,27 @@ describe("theme preference", () => {
     await store.getState().setPreference("dark");
 
     expect(store.getState().preference).toBe("dark");
+  });
+
+  it("uses the blue accent until another is chosen, and saves the choice", async () => {
+    const storage = memoryStorage();
+    const store = createThemePreferenceStore(storage);
+    expect(store.getState().accent).toBe("blue");
+
+    await store.getState().setAccent("green");
+
+    expect(store.getState().accent).toBe("green");
+    expect(storage.items.get("settings.accent")).toBe("green");
+  });
+
+  it("restores the saved accent, ignoring one it does not know", async () => {
+    const saved = createThemePreferenceStore(memoryStorage(undefined, "pink"));
+    const unknown = createThemePreferenceStore(memoryStorage(undefined, "teal"));
+
+    await saved.getState().restore();
+    await unknown.getState().restore();
+
+    expect(saved.getState().accent).toBe("pink");
+    expect(unknown.getState().accent).toBe("blue");
   });
 });
