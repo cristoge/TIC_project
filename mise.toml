@@ -1,0 +1,78 @@
+# Tool versions and day-to-day commands. First time: `mise trust && mise install && mise run install`.
+# List the tasks with `mise tasks`.
+
+[tools]
+python = "3.13"
+uv = "0.12"
+
+[env]
+# Make uv use the interpreter mise installed instead of one it downloads itself.
+UV_PYTHON = { value = "{{ tools.python.path }}", tools = true }
+
+# --- setup ---------------------------------------------------------------------------
+
+[tasks.install]
+description = "Install backend (uv) and mobile (npm) dependencies"
+run = [
+  "uv --directory backend sync",
+  "npm --prefix mobile install",
+]
+
+# --- local services ------------------------------------------------------------------
+
+[tasks.services]
+description = "Start Postgres (Docker) and Ollama; Docker Desktop must be running"
+run = [
+  "docker compose up -d --wait db",
+  "open -a Ollama",
+]
+
+[tasks.migrate]
+description = "Apply pending database migrations"
+depends = ["services"]
+dir = "{{config_root}}/backend"
+env = { _.file = "backend/.env.local" }
+run = "uv run python -m scripts.migrate"
+
+# --- backend ---------------------------------------------------------------------------
+
+[tasks.api]
+description = "REST API on 0.0.0.0:8000 (reachable from the phone)"
+dir = "{{config_root}}/backend"
+env = { _.file = "backend/.env.local" }
+run = "uv run uvicorn entrypoints.api.main:local_app --factory --host 0.0.0.0 --port 8000"
+
+[tasks.agent]
+description = "Chat agent on :8080 (AGENT_HOST in backend/.env.local)"
+dir = "{{config_root}}/backend"
+env = { _.file = "backend/.env.local" }
+run = "uv run python -m entrypoints.agent.app"
+
+[tasks.dev]
+description = "Services, migrations, then the API and the agent together"
+depends = ["migrate"]
+run = "mise run api ::: agent"
+
+[tasks.test]
+description = "Backend tests (the integration tests need Postgres)"
+depends = ["services"]
+dir = "{{config_root}}/backend"
+run = "uv run pytest"
+
+[tasks.token]
+description = "Print a Cognito ID token for curl: mise run token -- you@example.com"
+dir = "{{config_root}}/backend"
+env = { _.file = "backend/.env.local" }
+run = "uv run python -m scripts.get_token"
+
+# --- mobile ----------------------------------------------------------------------------
+
+[tasks.mobile]
+description = "Expo dev server"
+dir = "{{config_root}}/mobile"
+run = "npx expo start"
+
+[tasks."mobile:test"]
+description = "Mobile tests, type check and lint"
+dir = "{{config_root}}/mobile"
+run = ["npx jest", "npx tsc --noEmit", "npx expo lint"]
