@@ -21,11 +21,48 @@ run = [
 # --- local services ------------------------------------------------------------------
 
 [tasks.services]
-description = "Start Postgres (Docker) and Ollama; Docker Desktop must be running"
+description = "Start Postgres (Docker) and Ollama unless it already answers; the Docker daemon must be running"
+env = { _.file = "backend/.env.local" }
 run = [
   "docker compose up -d --wait db",
-  "open -a Ollama",
+  '''
+  url="${OLLAMA_URL:-http://localhost:11434}/api/tags"
+  curl -sf -m 2 "$url" >/dev/null && exit 0
+  if [ "$(uname)" = Darwin ]; then open -a Ollama; else setsid -f ollama serve >/dev/null 2>&1; fi
+  for _ in $(seq 1 30); do curl -sf -m 2 "$url" >/dev/null && exit 0; sleep 1; done
+  echo "Ollama did not answer on $url" >&2
+  exit 1
+  ''',
 ]
+
+[tasks.ip]
+description = "Show this machine's LAN IP and check the settings the phone depends on"
+run = '''
+if [ "$(uname)" = Darwin ]; then
+  ip=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+else
+  ip=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i = 1; i < NF; i++) if ($i == "src") print $(i + 1)}')
+  [ -n "$ip" ] || ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+fi
+[ -n "$ip" ] || { echo "Could not find this machine's LAN IP." >&2; exit 1; }
+echo "This machine: $ip"
+
+status=0
+check() {
+  actual=$(grep -E "^$2=" "$1" 2>/dev/null | cut -d= -f2-)
+  if [ "$actual" = "$3" ]; then
+    echo "  ok     $1  $2"
+  else
+    echo "  WRONG  $1  $2=${actual:-<missing>} (expected $3)"
+    status=1
+  fi
+}
+check backend/.env.local PUBLIC_BASE_URL "http://$ip:8000"
+check mobile/.env.local EXPO_PUBLIC_API_URL "http://$ip:8000"
+check mobile/.env.local EXPO_PUBLIC_AGENT_URL "http://$ip:8080/invocations"
+check backend/.env.local AGENT_HOST "0.0.0.0"
+exit $status
+'''
 
 [tasks.migrate]
 description = "Apply pending database migrations"
