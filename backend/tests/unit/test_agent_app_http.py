@@ -1,4 +1,4 @@
-"""Verifier probes: the AgentCore app over HTTP and the identity defaults (no AWS)."""
+"""The agent server over HTTP: authentication, payload handling and the event stream."""
 
 import json
 import time
@@ -9,8 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from starlette.testclient import TestClient
 
 import entrypoints.agent.app as agent_app
-from entrypoints.agent.handler import identify
-from entrypoints.api.auth import CurrentUser, JwtVerifier
+from entrypoints.api.auth import JwtVerifier
 
 KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 ISSUER, CLIENT = "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_T", "client"
@@ -86,44 +85,30 @@ def test_http_unauthenticated_requests_never_run_the_chat(client, headers):
     assert chat.calls == []
 
 
-def _build(monkeypatch, **env):
-    for name in ("AUTH_VALIDATED_UPSTREAM", "COGNITO_ISSUER", "COGNITO_CLIENT_ID"):
-        monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("DATABASE_URL", "postgresql://x@localhost/none")
-    monkeypatch.setenv("DOCUMENTS_BUCKET", "b")
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-central-1")
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "x")
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "x")
-    for k, v in env.items():
-        monkeypatch.setenv(k, v)
-    agent_app._chat_and_verifier.cache_clear()
-    try:
-        return agent_app._chat_and_verifier()
-    finally:
-        agent_app._chat_and_verifier.cache_clear()
+def test_ping_answers_healthy():
+    response = TestClient(agent_app.app).get("/ping")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "Healthy"
 
 
-def test_verification_is_the_default_and_fails_closed_without_cognito_settings(monkeypatch):
-    with pytest.raises(KeyError):
-        _build(monkeypatch)
-    with pytest.raises(KeyError):
-        _build(monkeypatch, AUTH_VALIDATED_UPSTREAM="TRUE")
-    _, verifier = _build(monkeypatch, COGNITO_ISSUER=ISSUER, COGNITO_CLIENT_ID=CLIENT)
-    assert isinstance(verifier, JwtVerifier)
-    _, verifier = _build(monkeypatch, AUTH_VALIDATED_UPSTREAM="true")
-    assert verifier is None
+def test_invalid_json_is_rejected_before_the_chat_runs(client):
+    http, chat = client
+    response = http.post(
+        "/invocations", content=b"{not json", headers={"Authorization": f"Bearer {_token()}", "Content-Type": "application/json"}
+    )
+
+    assert response.status_code == 400
+    assert chat.calls == []
 
 
-@pytest.mark.parametrize("claims", [
-    {"sub": "u1", "email": "a@example.com", "token_use": "access"},
-    {"sub": "u1", "email": "a@example.com"},
-    {"email": "a@example.com", "token_use": "id"},
-    {"sub": "u1", "token_use": "id"},
-])
-def test_upstream_mode_rejects_non_id_or_incomplete_tokens(claims):
-    assert identify({"Authorization": f"Bearer {jwt.encode(claims, KEY, algorithm='RS256')}"}, None) is None
+def test_events_are_sent_as_server_sent_events_with_unicode_kept(client):
+    http, _ = client
+    response = http.post(
+        "/invocations",
+        json={"conversation_id": CONVERSATION, "message": "Hola"},
+        headers={"Authorization": f"Bearer {_token()}"},
+    )
 
-
-def test_upstream_mode_uses_only_the_token_claims():
-    token = jwt.encode({"sub": "u1", "email": "a@example.com", "token_use": "id"}, KEY, algorithm="RS256")
-    assert identify({"Authorization": f"Bearer {token}", "X-User-Id": "evil"}, None) == CurrentUser("u1", "a@example.com")
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert response.text == 'data: {"type": "token", "data": "Hola"}\n\ndata: {"type": "end", "message_id": "m1"}\n\n'

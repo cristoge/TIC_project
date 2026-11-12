@@ -1,11 +1,11 @@
-"""The chat agent with Strands: the model (Nova 2 Lite on Bedrock, or DeepSeek locally) plus the project tools."""
+"""The chat agent with Strands: the model (see adapters/llm_models.py) plus the project tools."""
 
 import json
 from collections.abc import AsyncIterator
 
 from strands import Agent, ToolContext, tool
 
-from adapters.llm_models import ModelFactory, bedrock_model_factory
+from adapters.llm_models import ModelFactory
 from services.agent_tools import AgentTools
 from services.chat import HistoryMessage
 
@@ -40,13 +40,12 @@ class StrandsAgentRunner:
     def __init__(
         self,
         tools: AgentTools,
-        model_factory: ModelFactory | None = None,
+        model_factory: ModelFactory,
         temperature: float = CHAT_TEMPERATURE,
         max_turns: int = MAX_TURNS,
-        boto_client_config=None,
     ):
         self.tools = tools
-        self.model_factory = model_factory or bedrock_model_factory(boto_client_config=boto_client_config)
+        self.model_factory = model_factory
         self.temperature = temperature
         self.max_turns = max_turns
 

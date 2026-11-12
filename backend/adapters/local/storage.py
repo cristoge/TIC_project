@@ -1,10 +1,13 @@
-"""Local stand-in for the S3 bucket: same keys, files under one folder."""
+"""Document storage: uploaded PDFs and their extracted pages, as files under one folder."""
 
 import json
 from pathlib import Path
 
-from adapters.s3.storage import pages_key
 from domain.documents import Page
+
+
+def pages_key(document_id: str) -> str:
+    return f"documents/{document_id}/pages.json"
 
 
 class LocalDocumentStorage:
@@ -13,7 +16,7 @@ class LocalDocumentStorage:
         self.public_base_url = public_base_url.rstrip("/")
 
     def create_upload(self, s3_key: str, max_bytes: int) -> dict:
-        """Same shape as an S3 presigned POST; the API's /local-uploads route plays the bucket."""
+        """Same shape as an S3 presigned POST; the API's /local-uploads route receives the file."""
         return {"url": f"{self.public_base_url}/local-uploads", "fields": {"key": s3_key}}
 
     def save_upload(self, s3_key: str, content: bytes) -> None:

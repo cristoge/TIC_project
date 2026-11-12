@@ -1,14 +1,14 @@
-"""Local mode wiring (APP_ENV=local): everything runs on the developer's machine except the LLM API and Cognito.
+"""Wiring: everything runs on the developer's machine except the LLM API and Cognito.
 
-| Piece        | AWS                    | Local                                   |
-|--------------|------------------------|-----------------------------------------|
-| LLM          | Nova 2 Lite (Bedrock)  | DeepSeek API (DEEPSEEK_API_KEY)         |
-| Embeddings   | Titan V2               | Ollama (OLLAMA_EMBED_MODEL, 512 d)      |
-| Reranker     | Cohere Rerank 3.5      | none: hybrid (RRF) order                |
-| Files        | S3                     | LOCAL_STORAGE_DIR + POST /local-uploads |
-| Jobs         | SQS + Lambda           | background threads in the API process  |
-| Database     | RDS                    | Postgres from docker compose            |
-| Users        | Cognito                | the same Cognito user pool              |
+| Piece        | Implementation                          |
+|--------------|-----------------------------------------|
+| LLM          | LLM_MODEL: DeepSeek API or Ollama       |
+| Embeddings   | Ollama (OLLAMA_EMBED_MODEL, 512 d)      |
+| Reranker     | none: hybrid (RRF) order                |
+| Files        | LOCAL_STORAGE_DIR + POST /local-uploads |
+| Jobs         | background threads in the API process  |
+| Database     | Postgres from docker compose            |
+| Users        | Cognito user pool                       |
 """
 
 import os
@@ -17,7 +17,7 @@ from functools import cache
 
 from adapters.bedrock.agent_runner import StrandsAgentRunner
 from adapters.bedrock.structured_llm import StrandsStructuredLLM
-from adapters.llm_models import DEEPSEEK_FLASH, deepseek_model_factory
+from adapters.llm_models import DEFAULT_LLM_MODEL, DEFAULT_OLLAMA_URL, model_factory_from
 from adapters.local.queue import InProcessJobQueue
 from adapters.local.storage import LocalDocumentStorage
 from adapters.ollama.embeddings import OllamaEmbedder
@@ -37,10 +37,6 @@ from services.search import SearchService
 from services.study import StudyService
 
 
-def is_local() -> bool:
-    return os.environ.get("APP_ENV") == "local"
-
-
 @dataclass(frozen=True)
 class LocalServices:
     database_url: str
@@ -56,13 +52,13 @@ class LocalServices:
 @cache
 def local_services() -> LocalServices:
     database_url = os.environ["DATABASE_URL"]
-    deepseek_model = os.environ.get("DEEPSEEK_MODEL", DEEPSEEK_FLASH)
-    model_factory = deepseek_model_factory(os.environ["DEEPSEEK_API_KEY"], model_id=deepseek_model)
+    llm_model = os.environ.get("LLM_MODEL", DEFAULT_LLM_MODEL)
+    model_factory = model_factory_from(llm_model, os.environ)
     storage = LocalDocumentStorage(
         os.environ.get("LOCAL_STORAGE_DIR", ".local-data"), os.environ.get("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
     )
     embedder = OllamaEmbedder(
-        base_url=os.environ.get("OLLAMA_URL", "http://localhost:11434"),
+        base_url=os.environ.get("OLLAMA_URL", DEFAULT_OLLAMA_URL),
         model=os.environ.get("OLLAMA_EMBED_MODEL", "embeddinggemma-2:270m"),
     )
     search = SearchService(PostgresSearchIndex(database_url), embedder, reranker=None)
@@ -71,7 +67,7 @@ def local_services() -> LocalServices:
         pages=storage,
         search=search,
         llm=StrandsStructuredLLM(model_factory=model_factory),
-        model_id=f"deepseek/{deepseek_model}",
+        model_id=llm_model,
     )
     documents = PostgresDocumentRepository(database_url)
     return LocalServices(

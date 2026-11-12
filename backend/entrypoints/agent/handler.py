@@ -1,4 +1,4 @@
-"""Request handling for the chat agent, independent of AgentCore so it can be tested.
+"""Request handling for the chat agent, independent of the HTTP server so it can be tested.
 
 Payload: {"conversation_id": "<uuid>", "message": "..."}; the response is a stream of
 the events described in services/chat.py, or a single error event:
@@ -7,9 +7,7 @@ the events described in services/chat.py, or a single error event:
 
 import logging
 import uuid
-from collections.abc import AsyncIterator
-
-import jwt
+from collections.abc import AsyncIterator, Mapping
 
 from entrypoints.api.auth import CurrentUser, InvalidToken, JwtVerifier
 from services.chat import ConversationNotFound, InvalidChatRequest
@@ -17,26 +15,14 @@ from services.chat import ConversationNotFound, InvalidChatRequest
 logger = logging.getLogger(__name__)
 
 
-def identify(headers: dict, verifier: JwtVerifier | None) -> CurrentUser | None:
-    """The caller, from the Authorization header.
-
-    Deployed, AgentCore Runtime's inbound JWT authorizer has already validated the
-    token (signature, issuer, client) before the request reaches this code, and the
-    runtime has no route to Cognito's keys, so the claims are read without checking
-    the signature again (verifier=None). Locally there is no authorizer, so the
-    token is fully verified.
-    """
+def identify(headers: Mapping[str, str], verifier: JwtVerifier) -> CurrentUser | None:
+    """The caller, from the Authorization header; the Cognito ID token is always fully verified."""
     scheme, _, token = (headers or {}).get("Authorization", "").partition(" ")
     if scheme.lower() != "bearer" or not token:
         return None
     try:
-        if verifier is not None:
-            return verifier.verify(token)
-        claims = jwt.decode(token, options={"verify_signature": False})
-        if claims.get("token_use") != "id":
-            return None
-        return CurrentUser(id=claims["sub"], email=claims["email"])
-    except (InvalidToken, jwt.PyJWTError, KeyError):
+        return verifier.verify(token)
+    except InvalidToken:
         return None
 
 

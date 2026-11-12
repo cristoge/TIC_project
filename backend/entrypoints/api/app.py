@@ -1,6 +1,6 @@
 """REST API for the app: users, projects, documents, study artifacts and conversation history.
 
-The chat itself runs in AgentCore Runtime (entrypoints/agent); this API only
+The chat itself runs in the agent server (entrypoints/agent); this API only
 reads the stored conversations.
 """
 
@@ -35,9 +35,9 @@ class Container:
 
 
 def create_app(container: Container, jwt_verifier: JwtVerifier | None = None, local_uploads=None) -> FastAPI:
-    """`jwt_verifier` is for local runs; without it the user comes from API Gateway's Cognito authorizer.
+    """`jwt_verifier` validates the Cognito ID token; without it every request is rejected (401).
 
-    `local_uploads` (local mode only) adds POST /local-uploads, which plays the S3 bucket.
+    `local_uploads` adds POST /local-uploads, which receives the file the upload form points to.
     """
     app = FastAPI(title="Study RAG API", version="0.1.0")
     app.state.container = container

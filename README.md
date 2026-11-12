@@ -26,16 +26,18 @@ Trabajo de fin de especialización: Inteligencia Artificial y Big Data, Institut
 └────────────────────────────────────────────────┘
 ```
 
-El backend sigue una **arquitectura hexagonal**: el dominio y los servicios no dependen de ningún proveedor, y cada servicio externo entra por un adaptador. Por eso el mismo código corre en local o en AWS cambiando solo la configuración:
+El backend sigue una **arquitectura hexagonal**: el dominio y los servicios no dependen de ningún proveedor, y cada servicio externo entra por un adaptador. Todo corre en local salvo DeepSeek y Cognito:
 
-| Pieza | Local (`APP_ENV=local`) | AWS |
-|---|---|---|
-| LLM | DeepSeek | Nova 2 Lite (Bedrock) |
-| Embeddings | Ollama (`embeddinggemma-2:270m`) | Titan V2 |
-| Archivos | carpeta local | S3 |
-| Tareas en segundo plano | hilos en la API | SQS + Lambda |
-| Agente | proceso local en `:8080` | Bedrock AgentCore |
-| Usuarios | Cognito | Cognito |
+| Pieza | Implementación |
+|---|---|
+| LLM | DeepSeek |
+| Embeddings | Ollama (`embeddinggemma-2:270m`) |
+| Archivos | carpeta local |
+| Tareas en segundo plano | hilos en la API |
+| Agente | proceso local en `:8080` |
+| Usuarios | Cognito |
+
+Los adaptadores de AWS (Bedrock, S3, SQS, Lambda) se eliminaron el 2026-11-12: el despliegue se rehará desde cero. El código anterior sigue en git, en el tag `aws-adapters`.
 
 ## Estructura del repositorio
 

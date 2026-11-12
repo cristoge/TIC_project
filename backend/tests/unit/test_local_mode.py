@@ -1,14 +1,13 @@
-"""Local-mode adapters: DeepSeek and Bedrock model factories, Ollama embeddings, local files, in-process queue."""
+"""Local adapters: DeepSeek model factory, Ollama embeddings, local files, in-process queue."""
 
 import json
 from concurrent.futures import Future
 
 import httpx
 import pytest
-from strands.models import BedrockModel
 from strands.models.openai import OpenAIModel
 
-from adapters.llm_models import bedrock_model_factory, deepseek_model_factory
+from adapters.llm_models import deepseek_model_factory, model_factory_from
 from adapters.local.queue import InProcessJobQueue
 from adapters.local.storage import LocalDocumentStorage
 from adapters.ollama.embeddings import OllamaEmbedder
@@ -30,12 +29,42 @@ def test_deepseek_factory_builds_an_openai_compatible_model_with_the_requested_t
     }
 
 
-def test_bedrock_factory_builds_nova_with_the_requested_temperature():
-    model = bedrock_model_factory(region_name="eu-central-1")(0.2)
+def test_a_deepseek_spec_builds_deepseek_with_the_api_key():
+    model = model_factory_from("deepseek/deepseek-flash", {"DEEPSEEK_API_KEY": "secret"})(0.3)
 
-    assert isinstance(model, BedrockModel)
-    assert model.get_config()["model_id"] == "eu.amazon.nova-2-lite-v1:0"
+    assert isinstance(model, OpenAIModel)
+    assert model.client_args["api_key"] == "secret"
+    assert model.get_config()["model_id"] == "deepseek-flash"
+    assert model.get_config()["params"]["temperature"] == 0.3
+
+
+def test_an_ollama_spec_builds_an_ollama_model_on_the_configured_server():
+    from strands.models.ollama import OllamaModel
+
+    model = model_factory_from("ollama/qwen3:8b", {"OLLAMA_URL": "http://desktop:11434"})(0.2)
+
+    assert isinstance(model, OllamaModel)
+    assert model.host == "http://desktop:11434"
+    assert model.get_config()["model_id"] == "qwen3:8b"
     assert model.get_config()["temperature"] == 0.2
+
+
+def test_ollama_uses_the_local_server_by_default_and_keeps_slashes_in_the_model_name():
+    model = model_factory_from("ollama/hf.co/user/model:Q4", {})(0.2)
+
+    assert model.host == "http://localhost:11434"
+    assert model.get_config()["model_id"] == "hf.co/user/model:Q4"
+
+
+@pytest.mark.parametrize("spec", ["deepseek-flash", "openai/gpt", "ollama/", "/qwen3"])
+def test_an_unknown_or_incomplete_spec_is_rejected_with_the_expected_format(spec):
+    with pytest.raises(ValueError, match="LLM_MODEL must look like 'deepseek/<model>' or 'ollama/<model>'"):
+        model_factory_from(spec, {"DEEPSEEK_API_KEY": "secret"})
+
+
+def test_deepseek_without_an_api_key_says_what_is_missing():
+    with pytest.raises(ValueError, match="DEEPSEEK_API_KEY"):
+        model_factory_from("deepseek/deepseek-flash", {})
 
 
 # --- Ollama embeddings ------------------------------------------------------------

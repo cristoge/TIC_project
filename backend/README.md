@@ -1,6 +1,6 @@
 # Backend
 
-Python backend for the AWS migration described in [`docs/aws-migration/README.md`](../docs/aws-migration/README.md).
+Python backend of the study app. It runs on the developer's machine; only the DeepSeek API and Cognito are remote.
 
 ## Quick path
 
@@ -13,21 +13,21 @@ uv run pytest                    # unit and integration tests
 
 Integration tests create a throwaway database per test on the local Postgres and drop it afterwards. Point them at another server with `TEST_DATABASE_URL`.
 
-## Run everything locally
+## Run everything
 
-`APP_ENV=local` swaps the AWS services for local ones; only the DeepSeek API and Cognito stay remote (see `entrypoints/local.py`):
+Wiring lives in `entrypoints/local.py`:
 
-| Piece | AWS | Local |
-|-------|-----|-------|
-| LLM | Nova 2 Lite (Bedrock) | DeepSeek API |
-| Embeddings | Titan V2 | Ollama (`embeddinggemma-2:270m`, 512 d) |
-| Reranker | Cohere Rerank 3.5 | none: hybrid (RRF) order |
-| Files | S3 | `LOCAL_STORAGE_DIR` + `POST /local-uploads` (same form the app gets from S3) |
-| Generation jobs | SQS + Lambda | background threads in the API process |
-| Database | RDS | docker compose |
-| Users | Cognito | the same Cognito user pool (`infra/auth`) |
+| Piece | Implementation |
+|-------|----------------|
+| LLM | DeepSeek API |
+| Embeddings | Ollama (`embeddinggemma-2:270m`, 512 d) |
+| Reranker | none: hybrid (RRF) order |
+| Files | `LOCAL_STORAGE_DIR` + `POST /local-uploads` (same form as an S3 presigned POST) |
+| Generation jobs | background threads in the API process |
+| Database | docker compose |
+| Users | Cognito user pool (`infra/auth`) |
 
-Embeddings from different models cannot be mixed: a database ingested locally must be searched locally.
+Embeddings from different models cannot be mixed: changing the embedding model means ingesting the documents again.
 
 ```bash
 docker compose up -d --wait db                 # from the repository root
@@ -61,7 +61,7 @@ FastAPI app in `entrypoints/api/`. The full contract (bodies, status codes) is t
 |--------|------|-------|
 | GET, PATCH | `/me` | First request creates the user row from the token (`sub`, `email`) |
 | GET, POST | `/projects` | |
-| PATCH, DELETE | `/projects/{id}` | Delete also removes the documents' files in S3 |
+| PATCH, DELETE | `/projects/{id}` | Delete also removes the documents' files |
 | GET, POST | `/projects/{id}/documents` | POST `{name, size_bytes}` → pending document + presigned POST `{url, fields}`; PDF only, ≤ 30 MB, ≤ 20 per project (409) |
 | GET, PATCH, DELETE | `/documents/{id}` | |
 | GET, POST | `/documents/{id}/summaries` | POST → 202, queued; 409 if the document is not `ready` |
@@ -70,32 +70,26 @@ FastAPI app in `entrypoints/api/`. The full contract (bodies, status codes) is t
 | GET | `/summaries/{id}`, `/flashcard-decks/{id}`, `/quizzes/{id}` | Quiz questions never include the correct answer. Decks carry `card_count` and quizzes `question_count`; the per-document lists leave `cards` and `questions` empty |
 | PATCH, DELETE | `/flashcard-decks/{id}`, `/quizzes/{id}` | PATCH `{topic}` (blank or null clears it); DELETE also removes its cards or questions and attempts, and the chat message that created it keeps its text. `409` while it is still being generated |
 | POST | `/quizzes/{id}/attempts` | `{answers: {question_id: 0-3}}`, every question once → score and explanations (graded on the server) |
-| GET, POST | `/projects/{id}/conversations` | The chat itself runs in AgentCore Runtime |
+| GET, POST | `/projects/{id}/conversations` | The chat itself runs in the agent server (`entrypoints/agent/app.py`) |
 | GET | `/conversations/{id}/messages` | Messages with their sources (document, page) and created artifacts |
 | PATCH | `/conversations/{id}` | Rename: `{title}`, trimmed, 1–200 characters |
 | DELETE | `/conversations/{id}` | |
 
 Every resource is owner-scoped: another user's id answers 404, never 403.
 
-**Authentication.** In AWS, API Gateway's Cognito authorizer validates the ID token and the Lambda reads its claims (`lambda_handler` in `entrypoints/api/main.py`). Locally:
-
-```bash
-export DATABASE_URL=postgresql://study:study@localhost:5433/study DOCUMENTS_BUCKET=... GENERATION_QUEUE_URL=...
-export COGNITO_ISSUER=https://cognito-idp.eu-central-1.amazonaws.com/<pool-id> COGNITO_CLIENT_ID=<app-client-id>
-uv run uvicorn entrypoints.api.main:local_app --factory --reload
-```
+**Authentication.** The API validates the Cognito ID token itself with `COGNITO_ISSUER` and `COGNITO_CLIENT_ID` (see `.env.local.example`).
 
 ## Chat agent
 
-Strands agent (agentic RAG) served by AgentCore Runtime from `entrypoints/agent/app.py`.
+Strands agent (agentic RAG) served by FastAPI from `entrypoints/agent/app.py` (`POST /invocations`, `GET /ping`).
 
 - **Request**: `POST /invocations` with `{"conversation_id": "<uuid>", "message": "..."}` and the Cognito ID token in `Authorization: Bearer ...` (create the conversation first with `POST /projects/{id}/conversations`).
 - **Response**: SSE stream of JSON events: `token` (text as it is generated, in limited Markdown: **bold** and short bullet lists only, so the app must render Markdown), `sources` (only the passages cited as `[n]`, with document and page), `artifact` (`summary` / `flashcards` / `quiz` created in this turn, with its id), `end` (the saved message id), or a single `error` (`unauthenticated`, `invalid_request`, `not_found`, `internal`). If the agent produced no text (e.g. the turn limit stopped a tool loop), `error` with code `no_answer` replaces `end` and nothing is saved.
 - **Student's name**: the chat service reads `users.name` (set with `PATCH /me`) and the agent's instructions include it, so it can address the student and answer "what is my name"; without a name nothing is added.
 - **Tools**: `search_documents(query, document_ids?)`, `list_documents()`, `create_summary(document_id)`, `create_flashcards(document_id, count, topic?)`, `create_quiz(document_id, count, topic?)`. User and project come from the server-side request state, never from the model; any document id the model passes is checked against the project.
-- **Model**: Nova 2 Lite, temperature 0.2, at most 6 turns per request (Strands `limits`).
+- **Model**: `LLM_MODEL` (`deepseek/<model>` or `ollama/<model>`, see `.env.local.example`), temperature 0.2, at most 6 turns per request (Strands `limits`).
 - **History**: the newest messages of the conversation that fit in ~16,000 characters; only text and cited sources are stored, not tool calls.
-- **Auth**: deployed, AgentCore's inbound JWT authorizer validates the token and `AUTH_VALIDATED_UPSTREAM=true` makes the agent read its claims; locally, set `COGNITO_ISSUER` and `COGNITO_CLIENT_ID` and run `uv run python -m entrypoints.agent.app` (serves `:8080`).
+- **Auth**: the agent validates the token itself with `COGNITO_ISSUER` and `COGNITO_CLIENT_ID`; run it with `uv run python -m entrypoints.agent.app` (serves `:8080`).
 
 ## Layout
 
@@ -104,27 +98,22 @@ Strands agent (agentic RAG) served by AgentCore Runtime from `entrypoints/agent/
 | `migrations/` | Ordered SQL migrations (`0001_initial_schema.sql`, ...) |
 | `domain/` | Plain data types (`Page`, `Chunk`) |
 | `services/chunking.py` | Page-aware recursive splitter (~1100 chars, ~15 % overlap); each chunk keeps the page where it starts |
-| `services/ingestion.py` | `IngestionService.ingest(document_id, s3_key)`: PDF → pages → chunks → embeddings → database. Idempotent; a PDF without text fails without retry, any other error is raised so SQS retries |
-| `services/search.py` | `SearchService.search(project_id, query, document_ids=None)`: hybrid search (40 candidates) → reranker → top 8; falls back to the hybrid order if the reranker fails |
+| `services/ingestion.py` | `IngestionService.ingest(document_id, s3_key)`: PDF → pages → chunks → embeddings → database. Idempotent; a PDF without text fails without retry, any other error is raised |
+| `services/search.py` | `SearchService.search(project_id, query, document_ids=None)`: hybrid search (40 candidates) → optional reranker → top 8; falls back to the hybrid order if the reranker fails |
 | `services/study.py` | `StudyService`: `create_summary/create_flashcards/create_quiz` (pending row) and `generate_*` (fill it), plus `grade_quiz`. Structured output, validation (duplicates, lengths, 4 distinct options, pages clamped), options shuffled on the server. Final failures (too long, topic not found, nothing valid) are recorded and not retried |
 | `domain/study.py` | Pydantic models that are also the LLM output schemas (`Summary`, `FlashcardSet`, `Quiz`) and grading results |
-| `adapters/bedrock/structured_llm.py` | `StrandsStructuredLLM`: one-shot structured output with Strands on Bedrock (Nova 2 Lite by default) |
+| `adapters/bedrock/structured_llm.py` | `StrandsStructuredLLM`: one-shot structured output with Strands (DeepSeek through `adapters/llm_models.py`) |
 | `adapters/postgres/study.py` | `PostgresStudyRepository` for summaries, decks, quizzes and attempts |
-| `entrypoints/api/` | REST API: `app.py` (routes), `schemas.py` (contract), `auth.py` (Cognito claims / local JWT validation), `main.py` (wiring, Lambda handler via Mangum) |
+| `entrypoints/api/` | REST API: `app.py` (routes), `schemas.py` (contract), `auth.py` (Cognito JWT validation), `main.py` (`local_app` factory for uvicorn) |
 | `services/chat.py` | `ChatService.chat(...)`: one turn (history → agent → stream → persist) and the event protocol |
 | `services/agent_tools.py` | What the agent can do (search, list, create study artifacts) and `TurnRecorder` (citation numbers, artifacts) |
 | `adapters/bedrock/agent_runner.py` | `StrandsAgentRunner`, the system prompt and the Strands tool wrappers |
 | `adapters/postgres/conversations.py` | Conversation ownership, history within a character budget, saving a turn (messages, sources, artifacts, title) |
-| `entrypoints/agent/` | `handler.py` (identity, payload validation, error events) and `app.py` (AgentCore wiring) |
+| `entrypoints/agent/` | `handler.py` (identity, payload validation, error events) and `app.py` (agent server) |
 | `adapters/postgres/catalog.py` | Owner-scoped queries for the REST API |
-| `adapters/sqs/queue.py` | `SqsJobQueue`: queues study generation jobs |
-| `entrypoints/generation/handler.py` | Lambda handler for study jobs `{"kind": "summary" \| "flashcards" \| "quiz", "id": ...}` delivered through SQS. Needs `DATABASE_URL` and `DOCUMENTS_BUCKET` |
 | `evaluation/retrieval.py` | Retrieval metrics: first relevant rank, hit rate at k, mean reciprocal rank |
 | `adapters/postgres/` | `apply_migrations(conninfo)`, `PostgresDocumentRepository`, `PostgresSearchIndex` (calls the `hybrid_search` SQL function; blank query text gives the pure semantic order) |
-| `adapters/bedrock/embeddings.py` | `TitanEmbedder` (Titan Text Embeddings V2, 512 d, parallel calls) |
-| `adapters/bedrock/rerank.py` | `BedrockReranker` (Bedrock Rerank API, Cohere Rerank 3.5 by default) |
-| `adapters/s3/storage.py` | Reads uploaded PDFs; writes `documents/{id}/pages.json` |
+| `adapters/local/storage.py` | Stores uploaded PDFs and `documents/{id}/pages.json` under `LOCAL_STORAGE_DIR` |
 | `adapters/pdf/pymupdf_reader.py` | Per-page text extraction with PyMuPDF |
-| `entrypoints/ingest/handler.py` | Lambda handler for S3 upload notifications delivered through SQS (partial batch failures). Needs `DATABASE_URL` and `DOCUMENTS_BUCKET` |
 | `tests/unit/` | Tests with fakes and botocore stubs; no network |
 | `tests/integration/` | Tests against the local Postgres |

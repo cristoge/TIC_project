@@ -12,9 +12,9 @@ Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-
 | Backend hexagonal (dominio, servicios, adaptadores, puntos de entrada) | Hecho, 224 tests | `backend/` (ver `backend/README.md`) |
 | Esquema Postgres + pgvector + búsqueda híbrida (RRF) | Hecho | `backend/migrations/0001_initial_schema.sql` |
 | Ingesta de PDFs, búsqueda, resumen/flashcards/test, API REST, agente Strands | Hecho | `backend/services/`, `backend/entrypoints/` |
-| **Modo local** (`APP_ENV=local`) | **Funciona de principio a fin** | `backend/entrypoints/local.py` |
+| **Modo local** | **Funciona de principio a fin** | `backend/entrypoints/local.py` |
 | Cognito (un único usuario) | **Desplegado** en `eu-south-2` | `infra/auth/` (Terraform) |
-| Adaptadores AWS (Bedrock, S3, SQS, Lambda, AgentCore) | Escritos y probados, **sin desplegar** | `backend/adapters/`, `backend/entrypoints/` |
+| Adaptadores AWS (Bedrock, S3, SQS, Lambda) | **Eliminados** el 2026-11-12; se rehará desde cero | tag `aws-adapters` |
 | Plan y contrato de la app móvil | Cerrado | `docs/app/README.md` |
 | **App: base** (tema, átomos, cliente API tipado) | Hecho (T1, T2) | `mobile/src/shared/` |
 | **App: login con Cognito** | **Probado en dispositivo**; la renovación del token tras un 401 ya se ha visto funcionar en real | `mobile/src/features/auth/` |
@@ -26,7 +26,7 @@ Documento de traspaso entre sesiones de trabajo. Última actualización: **2026-
 | **App: rediseño** (menú lateral, fondo `#111112`, acento `#66A3FF`, botones flotantes, menús de opciones en el centro, campo de chat flotante) | **Probado en el simulador** | `odd/tasks/mobile-redesign.md` |
 | Infraestructura AWS de la app (`infra/app`) | **Aparcada** | — |
 
-Seguimiento tarea a tarea, con las peticiones literales del autor: `odd/tasks/mobile-app.md` (app), `odd/tasks/mobile-redesign.md` (rediseño y retoques) y `odd/tasks/aws-migration.md` (backend). La app tiene 298 tests (`cd mobile && npx jest`) y el backend 224 (`cd backend && uv run pytest`).
+Seguimiento tarea a tarea, con las peticiones literales del autor: `odd/tasks/mobile-app.md` (app), `odd/tasks/mobile-redesign.md` (rediseño y retoques) y `odd/tasks/aws-migration.md` (backend). La app tiene 298 tests (`cd mobile && npx jest`) y el backend 199 (`cd backend && uv run pytest`).
 
 ### Datos que hacen falta para arrancar
 
@@ -56,9 +56,9 @@ La API y el agente tienen que escuchar en `0.0.0.0`, no solo en `127.0.0.1`, par
 
 ## Decisiones tomadas (no reabrir sin motivo)
 
-- **Local primero, AWS después.** El código de AWS se queda, aislado en adaptadores; solo Cognito está desplegado.
+- **Local primero, AWS después.** Solo Cognito está desplegado. El código de AWS se eliminó (2026-11-12) porque el despliegue se hará desde cero; el anterior queda en el tag `aws-adapters`.
 - **Terraform** para la infraestructura (no CDK). Región de Cognito: `eu-south-2`.
-- **Modelos**: Nova 2 Lite en AWS, DeepSeek (`deepseek-flash`) en local; embeddings Titan V2 en AWS, Ollama `embeddinggemma-2:270m` en local (512 d). Los embeddings de un modelo no sirven con otro.
+- **Modelos**: DeepSeek (`deepseek-flash`); embeddings Ollama `embeddinggemma-2:270m` (512 d). Los embeddings de un modelo no sirven con otro.
 - **Troceador propio** (ni LangChain ni semchunk, probados y descartados).
 - **Monorepo**: backend, app, infraestructura y documentación en el mismo repositorio.
 - **Ningún cambio en AWS sin permiso explícito** del autor (despliegues, recursos, llamadas de pago).
@@ -73,7 +73,7 @@ La API y el agente tienen que escuchar en `0.0.0.0`, no solo en `127.0.0.1`, par
 Nada está a medias: todo está en `migration` y subido a GitHub. Por orden de interés:
 
 1. **Conjunto de evaluación** (ver «Más adelante»): es lo que da números para la memoria; necesita PDFs reales del autor.
-2. **Retomar AWS** (ver «Más adelante»).
+2. **AWS desde cero** (ver «Más adelante»).
 3. **Avisos abiertos de la app** (abajo).
 4. **Limpieza de tipado del backend**: basedpyright marca 1 error y 119 avisos en `backend/entrypoints/api/app.py`, sin fallos de comportamiento.
 
@@ -89,9 +89,9 @@ Nada está a medias: todo está en `migration` y subido a GitHub. Por orden de i
 
 - **Conjunto de evaluación** (necesita PDFs reales del autor): 20–30 preguntas, comparando búsqueda semántica, híbrida e híbrida + reranker. Las métricas ya existen (`backend/evaluation/retrieval.py`).
 - **Ollama en el PC de escritorio** (GPU de 16 GB): la ingesta pasa el 98 % del tiempo calculando embeddings (33 s para 367 fragmentos en el M2); basta con apuntar `OLLAMA_URL` al PC, con el mismo modelo.
-- **Retomar AWS** (`infra/app`, despliegue y evaluación completa). Pendientes ya identificados:
+- **AWS desde cero** (adaptadores, `infra/app`, despliegue y evaluación completa). El intento anterior está en el tag `aws-adapters`; lecciones que conviene no olvidar:
   - el autorizador JWT de AgentCore debe usar `allowed_audience` = id del app client (los ID tokens de Cognito no traen `client_id`);
-  - `AUTH_VALIDATED_UPSTREAM=true` solo en el runtime de AgentCore;
+  - el agente ya no tiene modo «sin verificar» (`AUTH_VALIDATED_UPSTREAM` se quitó el 2026-11-12): siempre valida el token contra las claves JWKS de Cognito, así que en AWS necesita salida a internet o repensar ese punto;
   - el reranker de Bedrock no existe en `eu-south-2`: elegir región para `infra/app`;
   - avisos abiertos de los verificadores en `odd/tasks/aws-migration.md` (L9, L10, L13, L14).
 

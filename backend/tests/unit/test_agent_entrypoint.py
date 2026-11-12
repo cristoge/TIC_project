@@ -98,9 +98,11 @@ def test_identify_verifies_the_token_locally():
     assert identify({}, verifier) is None
 
 
-def test_identify_behind_agentcore_reads_the_already_validated_token():
+def test_identify_never_trusts_a_token_it_cannot_verify():
+    verifier = JwtVerifier(ISSUER, CLIENT, jwks_client=Jwks())
     other_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    token = jwt.encode({"sub": "u1", "email": "a@example.com", "token_use": "id"}, other_key, algorithm="RS256")
+    claims = {"sub": "u1", "email": "a@example.com", "iss": ISSUER, "aud": CLIENT, "token_use": "id",
+              "exp": int(time.time()) + 300}
 
-    assert identify({"Authorization": f"Bearer {token}"}, verifier=None) == USER
-    assert identify({"Authorization": "Bearer garbage"}, verifier=None) is None
+    assert identify({"Authorization": f"Bearer {jwt.encode(claims, other_key, algorithm='RS256')}"}, verifier) is None
+    assert identify({"Authorization": "Bearer garbage"}, verifier) is None

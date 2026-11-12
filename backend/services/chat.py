@@ -1,6 +1,6 @@
 """One chat turn: load the conversation, run the agent, stream events, persist the result.
 
-Stream events (sent to the app over SSE by AgentCore Runtime):
+Stream events (sent to the app over SSE by the agent server, entrypoints/agent):
   {"type": "token", "data": "..."}                                   text as it is generated
   {"type": "sources", "data": [{"n", "document_id", "document_name", "page"}]}   cited passages only
   {"type": "artifact", "kind": "summary" | "flashcards" | "quiz", "id": "..."}  created in this turn

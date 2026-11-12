@@ -4,7 +4,7 @@ import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from entrypoints.api.auth import InvalidToken, JwtVerifier, user_from_api_gateway_event
+from entrypoints.api.auth import InvalidToken, JwtVerifier
 
 ISSUER = "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_TEST"
 CLIENT_ID = "app-client"
@@ -54,16 +54,3 @@ def test_valid_id_token_gives_the_user():
 def test_invalid_tokens_are_rejected(overrides):
     with pytest.raises(InvalidToken):
         _verifier().verify(_token(**overrides))
-
-
-def test_user_comes_from_the_api_gateway_authorizer_claims():
-    event = {"requestContext": {"authorizer": {"claims": {"sub": "user-1", "email": "a@example.com"}}}}
-
-    user = user_from_api_gateway_event(event)
-
-    assert (user.id, user.email) == ("user-1", "a@example.com")
-
-
-def test_missing_authorizer_claims_are_rejected():
-    with pytest.raises(InvalidToken):
-        user_from_api_gateway_event({"requestContext": {}})
