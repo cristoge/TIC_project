@@ -12,7 +12,7 @@ dependencies = [
     "pyjwt[crypto]>=2.15.1",
     "pymupdf>=2.1",
     "python-multipart>=0.0.33",
-    "strands-agents[ollama,openai]>=1.64.0",
+    "strands-agents[anthropic,ollama,openai]>=1.64.0",
     "uvicorn>=0.54.0",
 ]
 

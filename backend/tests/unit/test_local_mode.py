@@ -56,9 +56,56 @@ def test_ollama_uses_the_local_server_by_default_and_keeps_slashes_in_the_model_
     assert model.get_config()["model_id"] == "hf.co/user/model:Q4"
 
 
-@pytest.mark.parametrize("spec", ["deepseek-flash", "openai/gpt", "ollama/", "/qwen3"])
+def test_an_anthropic_spec_builds_claude_without_a_temperature():
+    from strands.models.anthropic import AnthropicModel
+
+    model = model_factory_from("anthropic/claude-sonnet-5-5", {"ANTHROPIC_API_KEY": "secret"})(0.2)
+
+    assert isinstance(model, AnthropicModel)
+    assert model.get_config()["model_id"] == "claude-sonnet-5-5"
+    assert model.get_config()["max_tokens"] == 16000
+    # Current Claude models reject sampling parameters with a 400, so the temperature is not sent.
+    assert "temperature" not in (model.get_config().get("params") or {})
+    assert model.client.api_key == "secret"
+
+
+def test_anthropic_without_an_api_key_leaves_the_credentials_to_the_sdk(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "found-by-the-sdk")
+
+    model = model_factory_from("anthropic/claude-sonnet-5-5", {})(0.2)
+
+    assert model.client.api_key == "found-by-the-sdk"
+
+
+def test_an_openai_spec_builds_an_openai_compatible_model_on_the_configured_server():
+    env = {"OPENAI_BASE_URL": "http://localhost:1234/v1", "OPENAI_API_KEY": "secret"}
+
+    model = model_factory_from("openai/qwen3-8b", env)(0.4)
+
+    assert isinstance(model, OpenAIModel)
+    assert model.client_args == {"api_key": "secret", "base_url": "http://localhost:1234/v1"}
+    assert model.get_config() == {"model_id": "qwen3-8b", "params": {"temperature": 0.4}}
+
+
+def test_openai_uses_the_openai_api_by_default_and_needs_a_key_there():
+    model = model_factory_from("openai/gpt-5", {"OPENAI_API_KEY": "secret"})(0.2)
+    assert model.client_args == {"api_key": "secret", "base_url": "https://api.openai.com/v1"}
+
+    with pytest.raises(ValueError, match="OPENAI_API_KEY"):
+        model_factory_from("openai/gpt-5", {})
+
+
+def test_a_local_openai_compatible_server_works_without_an_api_key():
+    model = model_factory_from("openai/qwen3-8b", {"OPENAI_BASE_URL": "http://localhost:1234/v1"})(0.2)
+
+    assert model.client_args["base_url"] == "http://localhost:1234/v1"
+    assert model.client_args["api_key"]
+
+
+@pytest.mark.parametrize("spec", ["deepseek-flash", "gemini/pro", "ollama/", "/qwen3", "anthropic/"])
 def test_an_unknown_or_incomplete_spec_is_rejected_with_the_expected_format(spec):
-    with pytest.raises(ValueError, match="LLM_MODEL must look like 'deepseek/<model>' or 'ollama/<model>'"):
+    expected = "LLM_MODEL must look like '<provider>/<model>' with provider deepseek, ollama, openai or anthropic"
+    with pytest.raises(ValueError, match=expected):
         model_factory_from(spec, {"DEEPSEEK_API_KEY": "secret"})
 
 
